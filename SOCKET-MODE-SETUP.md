@@ -45,9 +45,11 @@ features:
 oauth_config:
   scopes:
     bot:
-      - chat:write   # post messages and reply in threads
-      - commands     # handle slash commands
-      # No read scopes needed — channels are read via your personal xoxc- token
+      - channels:history       # read messages from public channels
+      - channels:read          # resolve channel info and permalinks
+      - chat:write             # post messages and reply in threads
+      - commands               # handle slash commands
+      - users:read             # resolve usernames in announcements
 
 settings:
   socket_mode_enabled: true
