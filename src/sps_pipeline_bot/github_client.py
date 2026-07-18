@@ -1,0 +1,148 @@
+"""GitHub integration — scan repos for applicable files and open PRs.
+
+Supports both github.ibm.com (GHE) and github.com (public) repos.
+CICS/* repos are assumed to be on github.ibm.com; IBM/* on github.com.
+"""
+
+from __future__ import annotations
+
+import base64
+import os
+from dataclasses import dataclass, field
+
+from github import Github, GithubException
+
+
+_GHE_BASE_URL = "https://github.ibm.com/api/v3"
+_PUBLIC_ORGS = {"IBM"}  # orgs that live on github.com
+
+
+def _get_client(repo_name: str) -> Github:
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        raise RuntimeError(
+            "GITHUB_TOKEN environment variable is not set. "
+            "Create a PAT at https://github.ibm.com/settings/tokens with repo scope."
+        )
+    org = repo_name.split("/")[0]
+    if org in _PUBLIC_ORGS:
+        return Github(login_or_token=token)
+    return Github(base_url=_GHE_BASE_URL, login_or_token=token)
+
+
+@dataclass
+class RepoMatch:
+    repo: str          # "CICS/my-repo"
+    matched_files: list[str]  # paths of files that matched the patterns
+    file_contents: dict[str, str] = field(default_factory=dict)  # path -> content
+
+
+def scan_repos(
+    repos: list[str],
+    file_patterns: list[str],
+) -> list[RepoMatch]:
+    """
+    For each repo, search for files whose paths match any of the given patterns.
+    Returns only repos where at least one file matched.
+    """
+    results: list[RepoMatch] = []
+
+    for repo_name in repos:
+        gh = _get_client(repo_name)
+        try:
+            repo = gh.get_repo(repo_name)
+        except GithubException:
+            continue
+
+        matched_files: list[str] = []
+        file_contents: dict[str, str] = {}
+
+        for pattern in file_patterns:
+            # Use GitHub code search: filename:<pattern> repo:<org>/<name>
+            query = f"filename:{pattern} repo:{repo_name}"
+            try:
+                code_results = gh.search_code(query=query)
+                for item in code_results:
+                    path = item.path
+                    if path not in matched_files:
+                        matched_files.append(path)
+                        # Fetch file content
+                        try:
+                            file_obj = repo.get_contents(path)
+                            if isinstance(file_obj, list):
+                                continue
+                            content = file_obj.decoded_content.decode("utf-8", errors="replace")
+                            file_contents[path] = content
+                        except GithubException:
+                            pass
+            except GithubException:
+                continue
+
+        if matched_files:
+            results.append(RepoMatch(repo=repo_name, matched_files=matched_files, file_contents=file_contents))
+
+    return results
+
+
+def get_file_content(repo_name: str, path: str) -> str:
+    """Fetch the raw content of a single file from a repo."""
+    gh = _get_client(repo_name)
+    repo = gh.get_repo(repo_name)
+    file_obj = repo.get_contents(path)
+    if isinstance(file_obj, list):
+        raise ValueError(f"{path} is a directory, not a file")
+    return file_obj.decoded_content.decode("utf-8", errors="replace")
+
+
+def create_pull_request(
+    repo_name: str,
+    branch_name: str,
+    title: str,
+    body: str,
+    file_changes: dict[str, str],  # path -> new content
+    base_branch: str = "main",
+) -> str:
+    """
+    Create a branch, commit file changes, and open a PR.
+    Returns the URL of the created PR.
+    """
+    gh = _get_client(repo_name)
+    repo = gh.get_repo(repo_name)
+
+    # Get the SHA of the base branch
+    base_ref = repo.get_branch(base_branch)
+    base_sha = base_ref.commit.sha
+
+    # Create the new branch
+    repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=base_sha)
+
+    # Commit each changed file
+    for file_path, new_content in file_changes.items():
+        try:
+            existing = repo.get_contents(file_path, ref=branch_name)
+            if isinstance(existing, list):
+                continue
+            repo.update_file(
+                path=file_path,
+                message=f"chore: {title}",
+                content=new_content,
+                sha=existing.sha,
+                branch=branch_name,
+            )
+        except GithubException:
+            # File doesn't exist yet — create it
+            repo.create_file(
+                path=file_path,
+                message=f"chore: {title}",
+                content=new_content,
+                branch=branch_name,
+            )
+
+    # Open the PR
+    pr = repo.create_pull(
+        title=title,
+        body=body,
+        head=branch_name,
+        base=base_branch,
+    )
+    return pr.html_url

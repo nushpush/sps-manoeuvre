@@ -1,0 +1,12 @@
+# Bob MCP config — contains tokens and webhook URL, never commit
+.bob/mcp.json
+.bob/slack-key.bin
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+.env

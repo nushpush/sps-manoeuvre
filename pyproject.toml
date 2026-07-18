@@ -1,0 +1,22 @@
+[project]
+name = "sps-pipeline-bot"
+version = "0.1.0"
+description = "MCP server for SPS pipeline bot — announcement tracker + troubleshooting assistant"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "slack-sdk>=3.27.0",
+    "PyGithub>=2.3.0",
+    "httpx>=0.27.0",
+    "pycryptodome>=3.20.0",
+]
+
+[project.scripts]
+sps-pipeline-bot = "sps_pipeline_bot.main:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sps_pipeline_bot"]
