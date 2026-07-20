@@ -58,11 +58,9 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from .config import load_repos, save_repos
-from .diff_generator import build_file_context
-from .github_client import create_pull_request, scan_repos
-from .slack_client import fetch_announcement_messages, search_troubleshooting
+from .github_client import AnnouncementAnalysis, build_file_context, create_pull_request, scan_repos
+from .slack_client import fetch_announcement_messages, post_webhook_alert as _post_webhook, search_troubleshooting
 from .slack_token_refresh import refresh_slack_env
-from .webhook import post_webhook_alert as _post_webhook
 
 # Auto-refresh Slack tokens from the desktop app on startup
 refresh_slack_env()

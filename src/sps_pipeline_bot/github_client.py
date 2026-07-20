@@ -2,11 +2,14 @@
 
 Supports both github.ibm.com (GHE) and github.com (public) repos.
 CICS/* repos are assumed to be on github.ibm.com; IBM/* on github.com.
+
+Also contains small helpers used by the MCP tools:
+  - build_file_context()  — format fetched file contents for Bob to read
+  - AnnouncementAnalysis  — dataclass Bob populates when analysing announcements
 """
 
 from __future__ import annotations
 
-import base64
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
@@ -157,3 +160,31 @@ def create_pull_request(
         base=base_branch,
     )
     return pr.html_url
+
+
+# ---------------------------------------------------------------------------
+# File context helper (used by MCP get_repo_files tool)
+# ---------------------------------------------------------------------------
+
+def build_file_context(file_contents: dict[str, str]) -> str:
+    """Format file contents into a readable block for Bob to analyse."""
+    if not file_contents:
+        return "No matching files found."
+    return "\n\n".join(f"=== {path} ===\n{content}" for path, content in file_contents.items())
+
+
+# ---------------------------------------------------------------------------
+# Announcement analysis dataclass (populated by Bob, not LLM)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class AnnouncementAnalysis:
+    """Structured representation of a parsed announcement — populated by Bob."""
+    category: str = ""
+    summary: str = ""
+    file_patterns: list[str] = field(default_factory=list)
+    suggested_change: str = ""
+    action_required: bool = True
+    raw_message: str = ""
+    channel: str = ""
+    permalink: str = ""
