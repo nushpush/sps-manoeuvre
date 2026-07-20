@@ -37,6 +37,14 @@ ALL_CHANNELS = ANNOUNCEMENT_CHANNELS + TROUBLESHOOTING_CHANNELS
 
 SLACK_OUTPUT_CHANNEL = "sps-updates-modernization"
 
+# Pipeline status notifications channel
+PIPELINE_NOTIFICATIONS_CHANNEL = "cics-sps-notifications"
+PIPELINE_NOTIFICATIONS_CHANNEL_ID = "C07LS8K2DTQ"
+
+# Colour codes used by the notification bot
+PIPELINE_FAILURE_COLOUR = "#f2446f"
+PIPELINE_SUCCESS_COLOUR = "#36a64f"
+
 # ---------------------------------------------------------------------------
 # Repo list — stored next to this package (team-local)
 # ---------------------------------------------------------------------------

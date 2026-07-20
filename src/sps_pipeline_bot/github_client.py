@@ -8,13 +8,15 @@ from __future__ import annotations
 
 import base64
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 
-from github import Github, GithubException
+from github import Github, GithubException, RateLimitExceededException
 
 
 _GHE_BASE_URL = "https://github.ibm.com/api/v3"
 _PUBLIC_ORGS = {"IBM"}  # orgs that live on github.com
+_SCAN_TIMEOUT = 20  # seconds per repo scan before giving up
 
 
 def _get_client(repo_name: str) -> Github:
@@ -44,21 +46,19 @@ def scan_repos(
     """
     For each repo, search for files whose paths match any of the given patterns.
     Returns only repos where at least one file matched.
+    Scans repos in parallel (one thread per repo) with a per-repo timeout.
     """
-    results: list[RepoMatch] = []
-
-    for repo_name in repos:
+    def _scan_one(repo_name: str) -> RepoMatch | None:
         gh = _get_client(repo_name)
         try:
             repo = gh.get_repo(repo_name)
         except GithubException:
-            continue
+            return None
 
         matched_files: list[str] = []
         file_contents: dict[str, str] = {}
 
         for pattern in file_patterns:
-            # Use GitHub code search: filename:<pattern> repo:<org>/<name>
             query = f"filename:{pattern} repo:{repo_name}"
             try:
                 code_results = gh.search_code(query=query)
@@ -66,7 +66,6 @@ def scan_repos(
                     path = item.path
                     if path not in matched_files:
                         matched_files.append(path)
-                        # Fetch file content
                         try:
                             file_obj = repo.get_contents(path)
                             if isinstance(file_obj, list):
@@ -75,11 +74,23 @@ def scan_repos(
                             file_contents[path] = content
                         except GithubException:
                             pass
-            except GithubException:
+            except (GithubException, RateLimitExceededException):
                 continue
 
         if matched_files:
-            results.append(RepoMatch(repo=repo_name, matched_files=matched_files, file_contents=file_contents))
+            return RepoMatch(repo=repo_name, matched_files=matched_files, file_contents=file_contents)
+        return None
+
+    results: list[RepoMatch] = []
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {executor.submit(_scan_one, repo_name): repo_name for repo_name in repos}
+        for future in as_completed(futures, timeout=_SCAN_TIMEOUT * len(repos)):
+            try:
+                result = future.result(timeout=_SCAN_TIMEOUT)
+                if result is not None:
+                    results.append(result)
+            except Exception:
+                continue
 
     return results
 
