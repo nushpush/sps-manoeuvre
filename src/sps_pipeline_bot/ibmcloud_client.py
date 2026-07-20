@@ -5,6 +5,12 @@ Uses IBM Cloud IAM API key for authentication.
 
 Environment variables required:
   IBM_CLOUD_API_KEY  — IBM Cloud API key with access to the Tekton pipelines
+
+Logic:
+  1. Scan every step log for "BUILD FAILURE".
+  2. If found → that step is the root cause; capture the surrounding context lines.
+  3. If no BUILD FAILURE anywhere → the failure is an SPS/infra problem, not a
+     build failure.  Caller should search SPS troubleshooting channels instead.
 """
 
 from __future__ import annotations
@@ -28,51 +34,32 @@ _REGION_API_URLS = {
 }
 _DEFAULT_REGION = "eu-gb"
 
-# Log lines that indicate the real error (vs noise/debug)
-_ERROR_PATTERNS = [
-    r"\[ERROR\]",
-    r"::error::",
-    r"Exit Code: '[^0]",
-    r"BUILD FAILURE",
-    r"FAILED",
-    r"Exception",
-    r"fatal:",
-    r"Error:",
-]
-_ERROR_RE = re.compile("|".join(_ERROR_PATTERNS), re.IGNORECASE)
-
-# Noise patterns to skip even if they match above
-_SKIP_PATTERNS = re.compile(
-    r"(debug|metric\.ts|cocoa-cli.*metric|Skipping step because a previous step failed)",
-    re.IGNORECASE,
-)
+# How many lines before/after "BUILD FAILURE" to include as context
+_CONTEXT_LINES = 10
 
 
 @dataclass
 class FailedStep:
     step_name: str
-    error_lines: list[str] = field(default_factory=list)
-    exit_code: str = ""
+    error_lines: list[str] = field(default_factory=list)  # context around BUILD FAILURE
+    is_build_failure: bool = True  # False = SPS/infra failure (no BUILD FAILURE found)
 
     @property
     def error_summary(self) -> str:
-        """First meaningful error line, cleaned of timestamps."""
+        """Return the most meaningful line from the captured context."""
+        if not self.error_lines:
+            return f"Step {self.step_name} failed"
+        # Return the first non-empty, non-separator line
         for line in self.error_lines:
-            clean = re.sub(r"^\S+Z\s+", "", line).strip()
-            clean = re.sub(r"::error::", "", clean).strip()
-            if clean and len(clean) > 10:
-                return clean
-        return f"Step {self.step_name} failed"
+            stripped = line.strip()
+            if stripped and stripped != "-" * 10:
+                return stripped[:300]
+        return self.error_lines[0][:300]
 
     @property
     def search_query(self) -> str:
-        """Extract keywords for troubleshooting search."""
-        summary = self.error_summary
-        # Strip Maven/Java boilerplate, keep the meaningful part
-        summary = re.sub(r"\[ERROR\]\s*", "", summary)
-        summary = re.sub(r"at [\w\.$]+\([\w\.]+:\d+\)", "", summary)
-        summary = re.sub(r"Stage \w+ collect evidence returned.*", "stage failed", summary)
-        return summary[:200].strip()
+        """Keywords for SPS troubleshooting search (used when is_build_failure=False)."""
+        return f"{self.step_name} failed"
 
 
 def _get_iam_token(api_key: str) -> str:
@@ -110,13 +97,19 @@ def _strip_timestamp(line: str) -> str:
 
 
 def get_failed_steps(run_url: str) -> list[FailedStep]:
-    """Fetch logs for a failed pipeline run and return steps with errors.
+    """Fetch logs for a failed pipeline run and return the step(s) that failed.
+
+    Strategy:
+      - Search every step for "BUILD FAILURE".
+      - If found, return a FailedStep with context lines around the failure.
+      - If not found in any step, return a single FailedStep with
+        is_build_failure=False so the caller knows to search SPS channels.
 
     Args:
         run_url: The IBM Cloud pipeline run URL from the Slack notification.
 
     Returns:
-        List of FailedStep objects, ordered by significance (root cause first).
+        List with one FailedStep.  Empty list only if the API itself failed.
     """
     api_key = os.environ.get("IBM_CLOUD_API_KEY")
     if not api_key:
@@ -142,12 +135,10 @@ def get_failed_steps(run_url: str) -> list[FailedStep]:
     logs_resp.raise_for_status()
     log_entries = logs_resp.json().get("logs", [])
 
-    failed_steps: list[FailedStep] = []
-
     for entry in log_entries:
         step_name = entry.get("name", "")
 
-        # Skip sidecar steps (dind, tekton-log-results) — they're infrastructure noise
+        # Skip infrastructure sidecar steps
         if any(skip in step_name for skip in ["dind", "tekton-log-results"]):
             continue
 
@@ -156,39 +147,24 @@ def get_failed_steps(run_url: str) -> list[FailedStep]:
             continue
         content = log_resp.json().get("data", "")
 
-        lines = content.split("\n")
-        error_lines = []
-        exit_code = ""
+        lines = [_strip_timestamp(l) for l in content.split("\n")]
 
-        for line in lines:
-            # Extract exit code
-            ec_match = re.search(r"Exit Code: '(\d+)'", line)
-            if ec_match:
-                exit_code = ec_match.group(1)
-
-            clean = _strip_timestamp(line)
-            if not clean:
-                continue
-            if _ERROR_RE.search(clean) and not _SKIP_PATTERNS.search(clean):
-                error_lines.append(clean)
-
-        # Only include steps that actually failed (non-zero exit or real errors)
-        if exit_code and exit_code != "0":
-            failed_steps.append(FailedStep(
-                step_name=step_name,
-                error_lines=error_lines[:20],  # cap at 20 lines
-                exit_code=exit_code,
-            ))
-        elif error_lines and "Skipping step because a previous step failed" not in (error_lines[0] if error_lines else ""):
-            # Some steps fail without an explicit exit code
-            if any("Exit Code:" not in l for l in error_lines):
-                failed_steps.append(FailedStep(
+        # Find the first "BUILD FAILURE" line
+        for i, line in enumerate(lines):
+            if "BUILD FAILURE" in line:
+                # Capture _CONTEXT_LINES before and after
+                start = max(0, i - _CONTEXT_LINES)
+                end = min(len(lines), i + _CONTEXT_LINES + 1)
+                context = [l for l in lines[start:end] if l]
+                return [FailedStep(
                     step_name=step_name,
-                    error_lines=error_lines[:20],
-                    exit_code=exit_code,
-                ))
+                    error_lines=context,
+                    is_build_failure=True,
+                )]
 
-    # Sort: steps with non-zero exit code first (root cause), skipped steps last
-    failed_steps.sort(key=lambda s: (s.exit_code == "" or s.exit_code == "0", s.step_name))
-
-    return failed_steps
+    # No BUILD FAILURE found anywhere — SPS/infra issue
+    return [FailedStep(
+        step_name="unknown",
+        error_lines=[],
+        is_build_failure=False,
+    )]

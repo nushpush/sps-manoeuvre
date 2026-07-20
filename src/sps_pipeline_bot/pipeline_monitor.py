@@ -146,27 +146,26 @@ def _post_failure_analysis(
             "text": {"type": "mrkdwn", "text": f"<{pipeline_link}|View pipeline run>"},
         })
 
-    # Root cause block — shown when we successfully fetched logs
-    if root_cause:
+    # Root cause block — shown when BUILD FAILURE was found in logs
+    if root_cause and root_cause.is_build_failure and root_cause.error_lines:
         error_preview = "\n".join(
-            f"> `{line[:180]}`" for line in root_cause.error_lines[:4]
-        ) or "> _(no error lines captured)_"
-        exit_note = f"  (exit code `{root_cause.exit_code}`)" if root_cause.exit_code else ""
+            f"> `{line[:180]}`" for line in root_cause.error_lines[:6]
+        )
         blocks.append({"type": "divider"})
         blocks.append({
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": (
-                    f"🔎 *Root Cause — step `{root_cause.step_name}`*{exit_note}\n"
-                    f"{error_preview}"
-                ),
+                "text": f"🔎 *BUILD FAILURE in step `{root_cause.step_name}`*\n{error_preview}",
             },
         })
 
     blocks.append({"type": "divider"})
 
-    if not search_results:
+    # If no BUILD FAILURE found → SPS/infra issue → search troubleshooting channels
+    is_sps_issue = root_cause is None or not root_cause.is_build_failure
+
+    if not search_results and is_sps_issue:
         blocks.append({
             "type": "section",
             "text": {
@@ -177,7 +176,7 @@ def _post_failure_analysis(
                 ),
             },
         })
-    else:
+    elif search_results:
         blocks.append({
             "type": "section",
             "text": {
@@ -272,15 +271,12 @@ def poll_once(verbose: bool = True) -> int:
                 failed_steps = get_failed_steps(run_url)
                 if failed_steps:
                     root_cause = failed_steps[0]
+                    if root_cause.is_build_failure:
+                        log(f"[monitor] BUILD FAILURE in step {root_cause.step_name!r}")
+                        log(f"[monitor] Context: {root_cause.error_summary[:120]!r}")
+                    else:
+                        log("[monitor] No BUILD FAILURE found — treating as SPS/infra issue.")
                     query = root_cause.search_query
-                    log(
-                        f"[monitor] Root cause: step={root_cause.step_name!r} "
-                        f"exit={root_cause.exit_code!r} "
-                        f"error={root_cause.error_summary[:80]!r}"
-                    )
-                    log(f"[monitor] Search query (from logs): {query!r}")
-                else:
-                    log("[monitor] Log fetch succeeded but no failed steps found — using fallback query.")
             except Exception as exc:
                 log(f"[monitor] ⚠️  Log fetch failed ({exc!r}) — falling back to pipeline-name query.")
         else:
@@ -288,15 +284,19 @@ def poll_once(verbose: bool = True) -> int:
                 log("[monitor] No run URL found — using fallback query.")
             else:
                 log("[monitor] IBM_CLOUD_API_KEY not set — using fallback query.")
-            log(f"[monitor] Searching (fallback): {query!r}")
 
-        log(f"[monitor] Searching: {query!r}")
-
-        try:
-            results = search_troubleshooting(query=query, max_results=3)
-            log(f"[monitor] Found {len(results)} result(s).")
-        except Exception as exc:
-            log(f"[monitor] Search failed: {exc}")
+        # Only search SPS channels when there's no build failure (SPS/infra issue)
+        is_sps_issue = root_cause is None or not root_cause.is_build_failure
+        if is_sps_issue:
+            log(f"[monitor] SPS/infra issue — searching: {query!r}")
+            try:
+                results = search_troubleshooting(query=query, max_results=3)
+                log(f"[monitor] Found {len(results)} result(s).")
+            except Exception as exc:
+                log(f"[monitor] Search failed: {exc}")
+                results = []
+        else:
+            log("[monitor] Build failure — skipping SPS channel search.")
             results = []
 
         try:
