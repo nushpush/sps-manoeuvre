@@ -30,7 +30,7 @@ from pathlib import Path
 
 _LEVELDB_DIR = Path.home() / "Library/Application Support/Slack/Local Storage/leveldb"
 _COOKIES_DB  = Path.home() / "Library/Application Support/Slack/Cookies"
-_KEY_CACHE   = Path.home() / ".bob" / "slack-key.bin"
+_KEY_CACHE   = Path(__file__).parent.parent.parent / ".bob" / "slack-key.bin"
 
 
 def _keychain_password() -> bytes:

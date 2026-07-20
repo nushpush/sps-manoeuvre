@@ -72,10 +72,16 @@ def save_repos(repos: list[RepoEntry]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# State — global ~/.bob/sps-state.json  (tracks processed Slack timestamps)
+# State — .bob/sps-state.json next to this project
+# Falls back to ~/.bob/sps-state.json if the project .bob dir doesn't exist.
 # ---------------------------------------------------------------------------
 
-_STATE_FILE = Path.home() / ".bob" / "sps-state.json"
+_PROJECT_BOB = Path(__file__).parent.parent.parent / ".bob"
+_STATE_FILE = (
+    _PROJECT_BOB / "sps-state.json"
+    if _PROJECT_BOB.is_dir()
+    else Path.home() / ".bob" / "sps-state.json"
+)
 
 
 def load_processed_timestamps() -> set[str]:

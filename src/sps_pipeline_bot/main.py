@@ -132,7 +132,7 @@ def fetch_announcements(limit: int = 20) -> list[dict]:
 
     Channels monitored: #one-pipeline-announce, #devops-complines, #secure-pipelines-service
 
-    Returns messages not yet seen (tracked in ~/.bob/sps-state.json).
+    Returns messages not yet seen (tracked in .bob/sps-state.json).
     Each result includes: channel, ts, text, permalink, username.
 
     Bob should analyse each message text to determine:
