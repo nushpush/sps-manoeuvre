@@ -17,12 +17,14 @@ ANNOUNCEMENT_CHANNELS = [
     "one-pipeline-announce",
     "devops-compliance",
     "secure-pipelines-service",
+    "ciso-security-scanning-pipeline",
 ]
 
 ANNOUNCEMENT_CHANNEL_IDS: dict[str, str] = {
     "one-pipeline-announce": "C04TZHM220P",
     "devops-compliance": "CFQHG5PP1",
     "secure-pipelines-service": "C04SYRN5X88",
+    "ciso-security-scanning-pipeline": "C02JTCEC00H",
 }
 
 TROUBLESHOOTING_CHANNELS = [

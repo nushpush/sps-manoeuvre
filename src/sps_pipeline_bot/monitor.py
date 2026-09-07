@@ -57,6 +57,22 @@ class _Classification:
 
 
 _RULES: list[tuple[list[str], _Classification]] = [
+    # Most specific rules first — order matters, first match wins.
+    (
+        # Explicit breaking-change announcement; must come before generic "base image" rule
+        # because the Aug-10 announcement mentions pipeline-base-ubi in passing.
+        ["get_env cli will no longer", "no longer support secure values", "breaking change: `get_env`"],
+        _Classification(
+            action_required=True,
+            summary="Breaking change: get_env CLI will no longer support secure values after 31 Aug 2026",
+            file_patterns=[".pipeline-config*.yaml", ".pipeline-scan-config.yaml", "scripts/"],
+            suggested_change=(
+                "Replace any use of `get_env` to fetch secrets/secure values in your pipeline scripts "
+                "and YAML with `get_secret` instead. This affects custom scripts and pipeline config YAMLs. "
+                "Deadline: 31 August 2026. See #ciso-security-scanning-pipeline for details."
+            ),
+        ),
+    ),
     (
         ["mend sca", "opt-in-mend-sca", "mend sca cli"],
         _Classification(
@@ -70,7 +86,7 @@ _RULES: list[tuple[list[str], _Classification]] = [
         ),
     ),
     (
-        ["versioned base image", "pipeline-base-ubi:", "base image"],
+        ["versioned base image", "pipeline-base-ubi:"],
         _Classification(
             action_required=True,
             summary="Versioned base image update available",
@@ -146,7 +162,12 @@ def _classify(message: SlackMessage) -> _Classification:
 
 
 def run_pipeline(verbose: bool = True) -> None:
-    """Fetch announcements → classify → scan repos → post webhook alerts."""
+    """Fetch announcements → classify → scan repos → post webhook alerts.
+
+    Deduplicates by classification summary so that multiple messages about the
+    same topic (e.g. several support questions all mentioning "mend sca") only
+    produce one alert per repo, not one per matching message.
+    """
 
     def log(msg: str) -> None:
         if verbose:
@@ -169,15 +190,29 @@ def run_pipeline(verbose: bool = True) -> None:
         log("⚠️  No repos in watchlist. Add repos to repos.json first.")
         return
 
+    # Deduplicate: collapse all messages that classify to the same topic into
+    # one entry, keeping the best (non-empty) permalink from the group.
+    # Dict key: classification summary string → (classification, best_permalink)
+    seen: dict[str, tuple[_Classification, str]] = {}
     for msg in messages:
         classification = _classify(msg)
-        log(f"\n── [{msg.channel}] {msg.text[:80].strip()}...")
-        log(f"   Category: {classification.summary}")
-
         if not classification.action_required or not classification.file_patterns:
-            log("   → Skipping (no action required or no file patterns).")
+            log(f"── [{msg.channel}] {msg.text[:80].strip()!r} → skipping ({classification.summary})")
             continue
+        existing = seen.get(classification.summary)
+        best_permalink = msg.permalink or (existing[1] if existing else "")
+        if not best_permalink and existing:
+            best_permalink = existing[1]
+        seen[classification.summary] = (classification, best_permalink)
 
+    if not seen:
+        log("✅ No actionable announcements.")
+        return
+
+    log(f"📋 {len(seen)} unique actionable topic(s): {list(seen)}")
+
+    for summary, (classification, permalink) in seen.items():
+        log(f"\n── Topic: {summary}")
         log(f"   → Scanning {len(repos)} repos for {classification.file_patterns}...")
         matches = scan_repos(repos=repos, file_patterns=classification.file_patterns)
 
@@ -196,7 +231,7 @@ def run_pipeline(verbose: bool = True) -> None:
                     suggested_change=classification.suggested_change,
                     change_description=f"Affected files: {', '.join(match.matched_files)}",
                     pr_url=None,
-                    announcement_permalink=msg.permalink or "",
+                    announcement_permalink=permalink,
                 )
                 log(f"   ✅ Alert posted for {match.repo}")
             except Exception as exc:
