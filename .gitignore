@@ -10,3 +10,18 @@ dist/
 build/
 .venv/
 .env
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Media / presentation artefacts — do not commit
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.mov
+*.pptx
+*.ppt
+*.key
+docs/sps-bot-animation.html

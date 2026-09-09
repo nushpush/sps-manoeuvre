@@ -1,88 +1,3 @@
-── [secure-pipelines-service] '*-----*\n*I S S U E*\n*Describe the issue in detail*\n&gt; Please share the documen' → skipping (Support question or channel notice (no action needed))
-── [secure-pipelines-service] 'Hi Team, We would like to send notifications to slack on pipeline failure along' → skipping (Unrecognised announcement — review manually)
-── [ciso-security-scanning-pipeline] 'Is there a sample scandef.yaml file available anywhere?' → skipping (Unrecognised announcement — review manually)
-── [ciso-security-scanning-pipeline] 'Hi team,\nI am currently running a Twistlock scan for a Docker image hosted on Do' → skipping (Unrecognised announcement — review manually)
-📋 3 unique actionable topic(s): ['Pipeline env variable retrieval method changing', 'detect-secrets configuration change required', 'Code signing configuration update required']
-
-── Topic: Pipeline env variable retrieval method changing
-   → Scanning 10 repos for ['.pipeline-config*.yaml', '.pipeline-scan-config.yaml', 'scripts/']...
-   → Found matches in 5 repo(s): ['CICS/cics-explorer-doc', 'CICS/cics-explorer-dbfunc', 'CICS/cics-explorer', 'CICS/cics-cm-plugin', 'CICS/cics-pa-plugin']
-   → Posting alert for CICS/cics-explorer-doc...
-   ✅ Alert posted for CICS/cics-explorer-doc
-   → Posting alert for CICS/cics-explorer-dbfunc...
-   ✅ Alert posted for CICS/cics-explorer-dbfunc
-   → Posting alert for CICS/cics-explorer...
-   ✅ Alert posted for CICS/cics-explorer
-   → Posting alert for CICS/cics-cm-plugin...
-   ✅ Alert posted for CICS/cics-cm-plugin
-   → Posting alert for CICS/cics-pa-plugin...
-   ✅ Alert posted for CICS/cics-pa-plugin
-
-── Topic: detect-secrets configuration change required
-   → Scanning 10 repos for ['.pipeline-config*.yaml', '.pipeline-scan-config.yaml', '.secrets.baseline']...
-   → Found matches in 5 repo(s): ['CICS/cics-explorer-doc', 'CICS/cics-explorer', 'CICS/cics-explorer-dbfunc', 'CICS/cics-cm-plugin', 'CICS/cics-pa-plugin']
-   → Posting alert for CICS/cics-explorer-doc...
-   ✅ Alert posted for CICS/cics-explorer-doc
-   → Posting alert for CICS/cics-explorer...
-   ✅ Alert posted for CICS/cics-explorer
-   → Posting alert for CICS/cics-explorer-dbfunc...
-   ✅ Alert posted for CICS/cics-explorer-dbfunc
-   → Posting alert for CICS/cics-cm-plugin...
-   ✅ Alert posted for CICS/cics-cm-plugin
-   → Posting alert for CICS/cics-pa-plugin...
-   ✅ Alert posted for CICS/cics-pa-plugin
-
-── Topic: Code signing configuration update required
-   → Scanning 10 repos for ['.pipeline-config*.yaml', 'GaraSign', 'sign']...
-   → Found matches in 5 repo(s): ['CICS/cics-explorer-doc', 'CICS/cics-explorer-dbfunc', 'CICS/cics-explorer', 'CICS/cics-cm-plugin', 'CICS/cics-pa-plugin']
-   → Posting alert for CICS/cics-explorer-doc...
-   ✅ Alert posted for CICS/cics-explorer-doc
-   → Posting alert for CICS/cics-explorer-dbfunc...
-   ✅ Alert posted for CICS/cics-explorer-dbfunc
-   → Posting alert for CICS/cics-explorer...
-   ✅ Alert posted for CICS/cics-explorer
-   → Posting alert for CICS/cics-cm-plugin...
-   ✅ Alert posted for CICS/cics-cm-plugin
-   → Posting alert for CICS/cics-pa-plugin...
-   ✅ Alert posted for CICS/cics-pa-plugin
-
-✅ Pipeline run complete.
---- exit $? ---
-=== 2026-08-19 09:04:28 ===
-/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/monitor.py:177: UserWarning: Slack token auto-refresh failed: Could not find xoxc- token in Slack LevelDB.
-Make sure the Slack desktop app is installed and you are logged in.
-  refresh_slack_env()
-/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/slack_client.py:48: UserWarning: Slack token auto-refresh failed: Could not find xoxc- token in Slack LevelDB.
-Make sure the Slack desktop app is installed and you are logged in.
-  refresh_slack_env()
-Traceback (most recent call last):
-  File "<frozen runpy>", line 198, in _run_module_as_main
-  File "<frozen runpy>", line 88, in _run_code
-  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/__main__.py", line 20, in <module>
-    run_pipeline(verbose=True)
-  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/monitor.py", line 180, in run_pipeline
-    messages = fetch_announcement_messages(limit=20)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/slack_client.py", line 70, in fetch_announcement_messages
-    client = _get_client()
-             ^^^^^^^^^^^^^
-  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/slack_client.py", line 51, in _get_client
-    raise RuntimeError(
-RuntimeError: SLACK_USER_TOKEN environment variable is not set.
-See SLACK-SETUP.md for how to extract your user token from the browser.
-🔄 Refreshing Slack tokens...
-📡 Fetching announcements...
---- exit $? ---
-=== 2026-08-20 09:00:04 ===
-/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/monitor.py:177: UserWarning: Slack token auto-refresh failed: Could not find xoxc- token in Slack LevelDB.
-Make sure the Slack desktop app is installed and you are logged in.
-  refresh_slack_env()
-/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/slack_client.py:48: UserWarning: Slack token auto-refresh failed: Could not find xoxc- token in Slack LevelDB.
-Make sure the Slack desktop app is installed and you are logged in.
-  refresh_slack_env()
-Traceback (most recent call last):
-  File "<frozen runpy>", line 198, in _run_module_as_main
-  File "<frozen runpy>", line 88, in _run_code
   File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/__main__.py", line 20, in <module>
     run_pipeline(verbose=True)
   File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/monitor.py", line 180, in run_pipeline
@@ -499,6 +414,91 @@ See SLACK-SETUP.md for how to extract your user token from the browser.
 📡 Fetching announcements...
 --- exit $? ---
 === 2026-09-07 09:00:04 ===
+/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/monitor.py:177: UserWarning: Slack token auto-refresh failed: Could not find xoxc- token in Slack LevelDB.
+Make sure the Slack desktop app is installed and you are logged in.
+  refresh_slack_env()
+/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/slack_client.py:48: UserWarning: Slack token auto-refresh failed: Could not find xoxc- token in Slack LevelDB.
+Make sure the Slack desktop app is installed and you are logged in.
+  refresh_slack_env()
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/__main__.py", line 20, in <module>
+    run_pipeline(verbose=True)
+  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/monitor.py", line 180, in run_pipeline
+    messages = fetch_announcement_messages(limit=20)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/slack_client.py", line 70, in fetch_announcement_messages
+    client = _get_client()
+             ^^^^^^^^^^^^^
+  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/slack_client.py", line 51, in _get_client
+    raise RuntimeError(
+RuntimeError: SLACK_USER_TOKEN environment variable is not set.
+See SLACK-SETUP.md for how to extract your user token from the browser.
+🔄 Refreshing Slack tokens...
+📡 Fetching announcements...
+--- exit $? ---
+=== 2026-09-08 09:00:05 ===
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/__main__.py", line 20, in <module>
+    run_pipeline(verbose=True)
+  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/monitor.py", line 180, in run_pipeline
+    messages = fetch_announcement_messages(limit=20)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/slack_client.py", line 79, in fetch_announcement_messages
+    history = client.conversations_history(channel=channel_id, limit=limit)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/site-packages/slack_sdk/web/client.py", line 3254, in conversations_history
+    return self.api_call("conversations.history", http_verb="GET", params=kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/site-packages/slack_sdk/web/base_client.py", line 169, in api_call
+    return self._sync_send(api_url=api_url, req_args=req_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/site-packages/slack_sdk/web/base_client.py", line 200, in _sync_send
+    return self._urllib_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/site-packages/slack_sdk/web/base_client.py", line 307, in _urllib_api_call
+    response = self._perform_urllib_http_request(url=url, args=request_args)  # type: ignore[arg-type]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/site-packages/slack_sdk/web/base_client.py", line 511, in _perform_urllib_http_request
+    raise err
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/site-packages/slack_sdk/web/base_client.py", line 410, in _perform_urllib_http_request
+    resp = self._perform_urllib_http_request_internal(url, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/site-packages/slack_sdk/web/base_client.py", line 540, in _perform_urllib_http_request_internal
+    resp = urlopen(req, context=self.ssl, timeout=self.timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/urllib/request.py", line 216, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/urllib/request.py", line 519, in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/urllib/request.py", line 536, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/urllib/request.py", line 1391, in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/urllib/request.py", line 1348, in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/http/client.py", line 1303, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/http/client.py", line 1344, in _send_request
+    self.putheader(hdr, value)
+  File "/Users/anushka/.pyenv/versions/3.11.14/lib/python3.11/http/client.py", line 1276, in putheader
+    values[i] = one_value.encode('latin-1')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'latin-1' codec can't encode character '\u0441' in position 2: ordinal not in range(256)
+🔄 Refreshing Slack tokens...
+📡 Fetching announcements...
+--- exit $? ---
+=== 2026-09-09 09:00:05 ===
 /Users/anushka/.bob/playground/sps-pipeline-bot/src/sps_pipeline_bot/monitor.py:177: UserWarning: Slack token auto-refresh failed: Could not find xoxc- token in Slack LevelDB.
 Make sure the Slack desktop app is installed and you are logged in.
   refresh_slack_env()
