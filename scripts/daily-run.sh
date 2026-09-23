@@ -5,8 +5,14 @@
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_FILE="$PROJECT_DIR/.bob/daily-run.log"
 MCP_JSON="$PROJECT_DIR/.bob/mcp.json"
-PYTHON="/Users/anushka/.pyenv/versions/3.11.14/bin/python3"
 SRC_DIR="$PROJECT_DIR/src"
+
+# Find python3 — prefer pyenv shim if available, fall back to system python3
+PYTHON="$(command -v python3)"
+if [[ -z "$PYTHON" ]]; then
+    echo "ERROR: python3 not found in PATH" >> "$LOG_FILE"
+    exit 1
+fi
 
 # Rotate log: keep last 500 lines
 if [[ -f "$LOG_FILE" ]]; then
@@ -28,4 +34,4 @@ for k, v in env.items():
 
 cd "$SRC_DIR"
 "$PYTHON" -m sps_pipeline_bot --run >> "$LOG_FILE" 2>&1
-echo "--- exit \$? ---" >> "$LOG_FILE"
+echo "--- exit $? ---" >> "$LOG_FILE"
