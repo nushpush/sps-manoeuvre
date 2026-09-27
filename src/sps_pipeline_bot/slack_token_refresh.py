@@ -197,6 +197,17 @@ def get_slack_tokens() -> tuple[str, str]:
 _refreshed = False
 
 
+def _sanitise_token(token: str) -> str:
+    """Strip non-ASCII characters from a token so it's safe to use as an HTTP header.
+
+    Slack's LevelDB storage can occasionally contain Cyrillic or other non-latin-1
+    characters at the start of the token value. Python's urllib rejects headers with
+    characters outside latin-1, causing a UnicodeEncodeError. Stripping them is safe
+    because the actual xoxc-/xoxd- token content is always ASCII.
+    """
+    return token.encode("ascii", errors="ignore").decode("ascii")
+
+
 def refresh_slack_env() -> None:
     """Inject fresh SLACK_USER_TOKEN and SLACK_COOKIE into os.environ.
 
@@ -216,8 +227,8 @@ def refresh_slack_env() -> None:
 
     try:
         xoxc, xoxd = get_slack_tokens()
-        os.environ["SLACK_USER_TOKEN"] = xoxc
-        os.environ["SLACK_COOKIE"] = xoxd
+        os.environ["SLACK_USER_TOKEN"] = _sanitise_token(xoxc)
+        os.environ["SLACK_COOKIE"] = _sanitise_token(xoxd)
         _refreshed = True
     except Exception as exc:
         # Non-fatal on non-macOS or if Slack isn't installed

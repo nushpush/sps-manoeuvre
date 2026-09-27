@@ -7,12 +7,19 @@ LOG_FILE="$PROJECT_DIR/.bob/daily-run.log"
 MCP_JSON="$PROJECT_DIR/.bob/mcp.json"
 SRC_DIR="$PROJECT_DIR/src"
 
-# Find python3 — prefer pyenv shim if available, fall back to system python3
+# launchd has a minimal PATH that picks up the wrong python3 (e.g. macOS system 3.9).
+# Prefer the pyenv shim if available, then fall back to system python3.
+# Add common pyenv paths explicitly since launchd doesn't load ~/.zshrc/.bashrc.
+export PATH="$HOME/.pyenv/shims:$HOME/.pyenv/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
 PYTHON="$(command -v python3)"
 if [[ -z "$PYTHON" ]]; then
     echo "ERROR: python3 not found in PATH" >> "$LOG_FILE"
     exit 1
 fi
+
+# Log which python is being used (helps diagnose future version issues)
+echo "Using python: $PYTHON ($("$PYTHON" --version 2>&1))" >> "$LOG_FILE"
 
 # Rotate log: keep last 500 lines
 if [[ -f "$LOG_FILE" ]]; then
