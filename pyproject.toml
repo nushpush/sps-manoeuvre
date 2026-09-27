@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-sps-pipeline-bot = "sps_pipeline_bot.main:run"
+sps-pipeline-bot = "sps_pipeline_bot.__main__:main"
 
 [build-system]
 requires = ["hatchling"]
