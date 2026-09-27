@@ -147,11 +147,13 @@ def scan_repos(
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = {executor.submit(_scan_one, repo_name): repo_name for repo_name in repos}
         for future in as_completed(futures, timeout=_SCAN_TIMEOUT * len(repos)):
+            repo_name = futures[future]
             try:
                 result = future.result(timeout=_SCAN_TIMEOUT)
                 if result is not None:
                     results.append(result)
-            except Exception:
+            except Exception as exc:
+                print(f"[github] ⚠️  Scan failed for {repo_name}: {exc}")
                 continue
 
     return results

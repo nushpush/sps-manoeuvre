@@ -77,7 +77,7 @@ def fetch_announcement_messages(limit: int = 20) -> list[SlackMessage]:
             continue
         try:
             history = client.conversations_history(channel=channel_id, limit=limit)
-        except SlackApiError:
+        except Exception:
             continue
 
         for msg in history.get("messages", []):
@@ -88,7 +88,7 @@ def fetch_announcement_messages(limit: int = 20) -> list[SlackMessage]:
             try:
                 pl = client.chat_getPermalink(channel=channel_id, message_ts=ts)
                 permalink = pl.get("permalink", "")
-            except SlackApiError:
+            except Exception:
                 permalink = ""
 
             username = ""
@@ -96,7 +96,7 @@ def fetch_announcement_messages(limit: int = 20) -> list[SlackMessage]:
                 try:
                     ui = client.users_info(user=user_id)
                     username = ui["user"].get("real_name") or ui["user"].get("name", "")
-                except SlackApiError:
+                except Exception:
                     pass
 
             results.append(
