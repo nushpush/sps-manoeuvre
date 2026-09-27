@@ -429,11 +429,26 @@ The `xoxc-` token stays valid until you log out of Slack in your browser. When i
 
 ---
 
+## Local files — what gets created and when
+
+These files live under `.bob/` and are all gitignored. None of them are committed to the repo. Here's what each one is, when it gets created, and what (if anything) you need to do:
+
+| File | What it is | Created by | Action needed |
+|---|---|---|---|
+| `.bob/mcp.json` | Credentials: `GITHUB_TOKEN`, `SLACK_WEBHOOK_URL`, `IBM_CLOUD_API_KEY` | **You** — create manually | Fill in from the template in [Step 6](#step-6--configure-the-bob-mcp-server) |
+| `.bob/slack-key.bin` | Cached AES key for decrypting your Slack session cookie | `python3 -m sps_pipeline_bot --bootstrap` | Run once on macOS — see [Step 5](#step-5--bootstrap-slack-token-auto-refresh-macos-only) |
+| `.bob/sps-state.json` | List of Slack message timestamps already processed (prevents re-alerting) | Auto-created on first `fetch_announcements` call | Nothing — created silently on first use |
+| `.bob/daily-run.log` | Log output from the launchd scheduled job | Auto-created by `daily-run.sh` when launchd runs | Nothing — only present if you set up the daily automation |
+
+> `.bob/channel_dump.json` may also appear if you've used the debug dump feature — it's safe to delete.
+
+---
+
 ## Security notes
 
 - `.bob/slack-key.bin` — `chmod 600`, gitignored. Never commit this file.
 - `.bob/mcp.json` — contains tokens and API keys, gitignored. Never commit this file.
-- `.bob/sps-state.json` — contains only Slack message timestamps (no secrets), gitignored.
+- `.bob/sps-state.json` — contains only Slack message timestamps (no secrets), gitignored. Auto-created on first run.
 - The bot **never writes to Slack directly** — all outbound messages go through the webhook URL you configure.
 - The bot only needs `repo` scope on GitHub — no admin, no org-level access.
 - For a zero-secrets production deployment using IBM Cloud Trusted Profile and Secrets Manager, see [`docs/automation-setup.md`](docs/automation-setup.md).
