@@ -1,0 +1,32 @@
+# SPS Pipeline Bot — Team Configuration Override
+# Copy this file to config.yaml (or src/sps_pipeline_bot/config.yaml) to customize
+# channel settings for your specific team or workspace.
+#
+# If config.yaml is absent, defaults configured in config.py are used.
+
+# Output channel where SPS notification alerts are posted
+slack_output_channel: "sps-updates-modernization"
+
+# Pipeline failure notification channel (watched by --monitor)
+pipeline_notifications_channel: "cics-sps-notifications"
+pipeline_notifications_channel_id: "C07LS8K2DTQ"
+
+# SPS Announcement channels to monitor
+# Note: On IBM Enterprise Slack, channel IDs are required as conversations.list is restricted.
+announcement_channels:
+  - name: "one-pipeline-announce"
+    id: "C04TZHM220P"
+  - name: "devops-compliance"
+    id: "CFQHG5PP1"
+  - name: "secure-pipelines-service"
+    id: "C04SYRN5X88"
+  - name: "ciso-security-scanning-pipeline"
+    id: "C02JTCEC00H"
+
+# Troubleshooting channels searched by the failure monitor
+troubleshooting_channels:
+  - "scs_code-signing"
+  - "scs-opensource-scan"
+  - "scs-sast"
+  - "cd-tekton-users-shared"
+  - "ciso-security-scanning-pipeline"

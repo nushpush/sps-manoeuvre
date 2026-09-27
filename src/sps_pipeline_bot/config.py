@@ -9,25 +9,24 @@ from typing import TypedDict
 
 
 # ---------------------------------------------------------------------------
-# Channel registry
+# Default Channel registry (IBM CICS / SPS standard defaults)
 # ---------------------------------------------------------------------------
 
-# Channel name -> ID mapping (conversations.list is blocked on IBM enterprise Slack)
-ANNOUNCEMENT_CHANNELS = [
+_DEFAULT_ANNOUNCEMENT_CHANNELS = [
     "one-pipeline-announce",
     "devops-compliance",
     "secure-pipelines-service",
     "ciso-security-scanning-pipeline",
 ]
 
-ANNOUNCEMENT_CHANNEL_IDS: dict[str, str] = {
+_DEFAULT_ANNOUNCEMENT_CHANNEL_IDS: dict[str, str] = {
     "one-pipeline-announce": "C04TZHM220P",
     "devops-compliance": "CFQHG5PP1",
     "secure-pipelines-service": "C04SYRN5X88",
     "ciso-security-scanning-pipeline": "C02JTCEC00H",
 }
 
-TROUBLESHOOTING_CHANNELS = [
+_DEFAULT_TROUBLESHOOTING_CHANNELS = [
     "scs_code-signing",
     "scs-opensource-scan",
     "scs-sast",
@@ -35,13 +34,98 @@ TROUBLESHOOTING_CHANNELS = [
     "ciso-security-scanning-pipeline",
 ]
 
+_DEFAULT_SLACK_OUTPUT_CHANNEL = "sps-updates-modernization"
+_DEFAULT_PIPELINE_NOTIFICATIONS_CHANNEL = "cics-sps-notifications"
+_DEFAULT_PIPELINE_NOTIFICATIONS_CHANNEL_ID = "C07LS8K2DTQ"
+
+
+# ---------------------------------------------------------------------------
+# YAML config override parser (pure-Python basic YAML parser to avoid hard PyYAML dep)
+# ---------------------------------------------------------------------------
+
+def _load_yaml_config() -> dict:
+    """Load config overrides from config.yaml if present in project or package dir."""
+    locations = [
+        Path(__file__).resolve().parent / "config.yaml",
+        Path(__file__).resolve().parent.parent.parent / "config.yaml",
+    ]
+    for loc in locations:
+        if loc.is_file():
+            try:
+                # Try yaml module if available
+                import yaml  # type: ignore[import-untyped]
+                with loc.open() as fh:
+                    return yaml.safe_load(fh) or {}
+            except ImportError:
+                # Basic line-by-line fallback for standard config keys
+                return _parse_simple_yaml(loc.read_text())
+            except Exception:
+                pass
+    return {}
+
+
+def _parse_simple_yaml(text: str) -> dict:
+    """Simple parser for flat or 1-level list YAML entries without external dependencies."""
+    data: dict = {}
+    current_list_key = None
+    current_dict_item: dict | None = None
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("- "):
+            item_val = line[2:].strip().strip("\"'")
+            if ":" in item_val:
+                k, v = item_val.split(":", 1)
+                item_dict = {k.strip(): v.strip().strip("\"'")}
+                if current_list_key:
+                    data.setdefault(current_list_key, []).append(item_dict)
+            elif current_list_key:
+                data.setdefault(current_list_key, []).append(item_val)
+        elif ":" in line:
+            parts = line.split(":", 1)
+            key = parts[0].strip()
+            val = parts[1].strip().strip("\"'")
+            if not val:
+                current_list_key = key
+            else:
+                current_list_key = None
+                data[key] = val
+    return data
+
+
+_yaml_cfg = _load_yaml_config()
+
+# Configure channels with overrides if present
+ANNOUNCEMENT_CHANNELS: list[str] = []
+ANNOUNCEMENT_CHANNEL_IDS: dict[str, str] = dict(_DEFAULT_ANNOUNCEMENT_CHANNEL_IDS)
+
+if "announcement_channels" in _yaml_cfg and isinstance(_yaml_cfg["announcement_channels"], list):
+    for ch in _yaml_cfg["announcement_channels"]:
+        if isinstance(ch, dict) and "name" in ch:
+            ch_name = ch["name"]
+            ANNOUNCEMENT_CHANNELS.append(ch_name)
+            if "id" in ch:
+                ANNOUNCEMENT_CHANNEL_IDS[ch_name] = ch["id"]
+        elif isinstance(ch, str):
+            ANNOUNCEMENT_CHANNELS.append(ch)
+else:
+    ANNOUNCEMENT_CHANNELS = list(_DEFAULT_ANNOUNCEMENT_CHANNELS)
+
+TROUBLESHOOTING_CHANNELS: list[str] = (
+    _yaml_cfg["troubleshooting_channels"]
+    if "troubleshooting_channels" in _yaml_cfg and isinstance(_yaml_cfg["troubleshooting_channels"], list)
+    else list(_DEFAULT_TROUBLESHOOTING_CHANNELS)
+)
+
 ALL_CHANNELS = ANNOUNCEMENT_CHANNELS + TROUBLESHOOTING_CHANNELS
 
-SLACK_OUTPUT_CHANNEL = "sps-updates-modernization"
+SLACK_OUTPUT_CHANNEL = str(_yaml_cfg.get("slack_output_channel", _DEFAULT_SLACK_OUTPUT_CHANNEL))
 
 # Pipeline status notifications channel
-PIPELINE_NOTIFICATIONS_CHANNEL = "cics-sps-notifications"
-PIPELINE_NOTIFICATIONS_CHANNEL_ID = "C07LS8K2DTQ"
+PIPELINE_NOTIFICATIONS_CHANNEL = str(_yaml_cfg.get("pipeline_notifications_channel", _DEFAULT_PIPELINE_NOTIFICATIONS_CHANNEL))
+PIPELINE_NOTIFICATIONS_CHANNEL_ID = str(_yaml_cfg.get("pipeline_notifications_channel_id", _DEFAULT_PIPELINE_NOTIFICATIONS_CHANNEL_ID))
 
 # Colour codes used by the notification bot
 PIPELINE_FAILURE_COLOUR = "#f2446f"
