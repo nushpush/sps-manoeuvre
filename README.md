@@ -194,10 +194,9 @@ Create or edit **`.bob/mcp.json`** inside the project directory:
 
 ### Step 7 — Add your repositories to the watchlist
 
-Ask Bob:
-> *"add repo CICS/my-repo to the sps pipeline bot watchlist"*
+The watchlist lives in `src/sps_pipeline_bot/repos.json` — this file is **gitignored** so each user maintains their own local copy without it affecting the shared repo.
 
-Or edit `src/sps_pipeline_bot/repos.json` directly:
+On first use it is auto-created from `repos.json.example`. Edit it to add your repos:
 
 ```json
 {
@@ -209,6 +208,9 @@ Or edit `src/sps_pipeline_bot/repos.json` directly:
 ```
 
 Format is `ORG/NAME`. Repos prefixed with `IBM/` are looked up on `github.com`; all others on `github.ibm.com`.
+
+Or ask Bob to manage it:
+> *"add repo CICS/my-repo to the sps pipeline bot watchlist"*
 
 ---
 
@@ -349,19 +351,22 @@ python3 -m sps_pipeline_bot --run
 
 ## Repo watchlist
 
-The watchlist lives in `src/sps_pipeline_bot/repos.json`. It is not gitignored — commit your team's watchlist so everyone starts with the right repos.
+The watchlist lives in `src/sps_pipeline_bot/repos.json`. This file is **gitignored** — each user populates their own local copy so different team members can watch different sets of repos.
+
+**On first run**, `repos.json` is auto-created from `repos.json.example`. Open it and replace the placeholder entries with your own repos:
 
 ```json
 {
   "repos": [
-    { "repo": "CICS/cics-explorer-docs",    "description": "CICS Explorer documentation" },
-    { "repo": "CICS/cics-cm-plugin",         "description": "CICS CM Plugin" },
-    { "repo": "IBM/cics-bundle-maven",        "description": "CICS Bundle Maven (github.com)" }
+    { "repo": "CICS/my-repo",         "description": "My repo (github.ibm.com)" },
+    { "repo": "IBM/cics-bundle-maven", "description": "CICS Bundle Maven (github.com)" }
   ]
 }
 ```
 
 Repos with org prefix `IBM/` are fetched from `github.com`. All others from `github.ibm.com`.
+
+`repos.json.example` **is** committed and shows the format — edit that if you want to update the template shown to new users.
 
 ---
 
@@ -439,6 +444,7 @@ These files live under `.bob/` and are all gitignored. None of them are committe
 | `.bob/slack-key.bin` | Cached AES key for decrypting your Slack session cookie | `python3 -m sps_pipeline_bot --bootstrap` | Run once on macOS — see [Step 5](#step-5--bootstrap-slack-token-auto-refresh-macos-only) |
 | `.bob/sps-state.json` | List of Slack message timestamps already processed (prevents re-alerting) | Auto-created on first `fetch_announcements` call | Nothing — created silently on first use |
 | `.bob/daily-run.log` | Log output from the launchd scheduled job | Auto-created by `daily-run.sh` when launchd runs | Nothing — only present if you set up the daily automation |
+| `src/sps_pipeline_bot/repos.json` | Your personal repo watchlist | Auto-created from `repos.json.example` on first use | Edit to add your own repos — see [Step 7](#step-7--add-your-repositories-to-the-watchlist) |
 
 > `.bob/channel_dump.json` may also appear if you've used the debug dump feature — it's safe to delete.
 

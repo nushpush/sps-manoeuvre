@@ -48,10 +48,12 @@ PIPELINE_FAILURE_COLOUR = "#f2446f"
 PIPELINE_SUCCESS_COLOUR = "#36a64f"
 
 # ---------------------------------------------------------------------------
-# Repo list — stored next to this package (team-local)
+# Repo list — gitignored, local to each user's machine.
+# On first use, auto-bootstrapped from repos.json.example.
 # ---------------------------------------------------------------------------
 
 _REPOS_FILE = Path(__file__).parent / "repos.json"
+_REPOS_EXAMPLE = Path(__file__).parent / "repos.json.example"
 
 
 class RepoEntry(TypedDict):
@@ -60,12 +62,20 @@ class RepoEntry(TypedDict):
 
 
 def load_repos() -> list[RepoEntry]:
-    """Return the list of watched repos. Returns [] if the file is missing."""
+    """Return the list of watched repos.
+
+    If repos.json doesn't exist, copies repos.json.example as a starting point
+    and returns an empty list — the user should edit repos.json to add their repos.
+    """
     if not _REPOS_FILE.exists():
+        if _REPOS_EXAMPLE.exists():
+            import shutil
+            shutil.copy(_REPOS_EXAMPLE, _REPOS_FILE)
         return []
     with _REPOS_FILE.open() as fh:
         data = json.load(fh)
-    return data.get("repos", [])
+    # filter out the placeholder entry from the example
+    return [r for r in data.get("repos", []) if r.get("repo") != "ORG/repo-name"]
 
 
 def save_repos(repos: list[RepoEntry]) -> None:
