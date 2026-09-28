@@ -1,0 +1,17 @@
+{
+  "_comment": "Copy this file to repos.json and replace with your own repositories. repos.json is gitignored — each user maintains their own local watchlist.",
+  "repos": [
+    {
+      "repo": "ORG/repo-name",
+      "description": "Human-readable label for this repo"
+    },
+    {
+      "repo": "CICS/cics-explorer-docs",
+      "description": "Example: CICS Explorer documentation (github.ibm.com)"
+    },
+    {
+      "repo": "IBM/cics-bundle-maven",
+      "description": "Example: CICS Bundle Maven plugin (github.com — use IBM/ prefix)"
+    }
+  ]
+}

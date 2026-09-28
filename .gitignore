@@ -2,6 +2,11 @@
 .bob/mcp.json
 .bob/slack-key.bin
 
+# Bob runtime state — Slack timestamps, logs. Not useful to commit.
+.bob/sps-state.json
+.bob/daily-run.log
+.bob/channel_dump.json
+
 # Python
 __pycache__/
 *.py[cod]
@@ -10,3 +15,25 @@ dist/
 build/
 .venv/
 .env
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Generated reports / spreadsheets — these are outputs, not source
+*.xlsx
+*.xls
+
+# Media / presentation artefacts — do not commit
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.mov
+*.pptx
+*.ppt
+*.key
+docs/sps-bot-animation.html
+
+# Repo watchlist — each user maintains their own local copy (see repos.json.example)
+src/sps_manoeuvre/repos.json

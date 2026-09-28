@@ -6,13 +6,13 @@ No browser interaction or manual copy-paste needed. Works as long as:
   - The user is logged in to Slack
 
 On first run, requires the AES key to be bootstrapped via:
-    python3 -m sps_pipeline_bot.slack_token_refresh --bootstrap
+    python3 -m sps_manoeuvre.slack_token_refresh --bootstrap
 which calls `security` once in a terminal context (where Keychain access is
 already granted) and caches the derived AES key to ~/.bob/slack-key.bin.
 Subsequent runs read the cached key — no Keychain or subprocess needed.
 
 Usage:
-    from sps_pipeline_bot.slack_token_refresh import refresh_slack_env
+    from sps_manoeuvre.slack_token_refresh import refresh_slack_env
     refresh_slack_env()   # injects SLACK_USER_TOKEN + SLACK_COOKIE into os.environ
 """
 
@@ -30,7 +30,7 @@ from pathlib import Path
 
 _LEVELDB_DIR = Path.home() / "Library/Application Support/Slack/Local Storage/leveldb"
 _COOKIES_DB  = Path.home() / "Library/Application Support/Slack/Cookies"
-_KEY_CACHE   = Path.home() / ".bob" / "slack-key.bin"
+_KEY_CACHE   = Path(__file__).parent.parent.parent / ".bob" / "slack-key.bin"
 
 
 def _keychain_password() -> bytes:
@@ -84,7 +84,7 @@ def bootstrap() -> None:
     """One-time setup: derive and cache the AES key from Keychain.
 
     Run this once from a terminal where Keychain access is already granted:
-        python3 -m sps_pipeline_bot.slack_token_refresh --bootstrap
+        python3 -m sps_manoeuvre.slack_token_refresh --bootstrap
     """
     password = _keychain_password()
     key = _derive_key(password)
@@ -119,7 +119,7 @@ def _read_xoxd() -> str | None:
     if key is None:
         raise RuntimeError(
             "Slack AES key not found. Run bootstrap first:\n"
-            "  python3 -m sps_pipeline_bot.slack_token_refresh --bootstrap"
+            "  python3 -m sps_manoeuvre.slack_token_refresh --bootstrap"
         )
     if not _COOKIES_DB.exists():
         return None
@@ -197,6 +197,17 @@ def get_slack_tokens() -> tuple[str, str]:
 _refreshed = False
 
 
+def _sanitise_token(token: str) -> str:
+    """Strip non-ASCII characters from a token so it's safe to use as an HTTP header.
+
+    Slack's LevelDB storage can occasionally contain Cyrillic or other non-latin-1
+    characters at the start of the token value. Python's urllib rejects headers with
+    characters outside latin-1, causing a UnicodeEncodeError. Stripping them is safe
+    because the actual xoxc-/xoxd- token content is always ASCII.
+    """
+    return token.encode("ascii", errors="ignore").decode("ascii")
+
+
 def refresh_slack_env() -> None:
     """Inject fresh SLACK_USER_TOKEN and SLACK_COOKIE into os.environ.
 
@@ -216,8 +227,8 @@ def refresh_slack_env() -> None:
 
     try:
         xoxc, xoxd = get_slack_tokens()
-        os.environ["SLACK_USER_TOKEN"] = xoxc
-        os.environ["SLACK_COOKIE"] = xoxd
+        os.environ["SLACK_USER_TOKEN"] = _sanitise_token(xoxc)
+        os.environ["SLACK_COOKIE"] = _sanitise_token(xoxd)
         _refreshed = True
     except Exception as exc:
         # Non-fatal on non-macOS or if Slack isn't installed

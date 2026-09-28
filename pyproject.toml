@@ -1,7 +1,7 @@
 [project]
-name = "sps-pipeline-bot"
+name = "sps-manoeuvre"
 version = "0.1.0"
-description = "MCP server for SPS pipeline bot — announcement tracker + troubleshooting assistant"
+description = "MCP server for SPS Manoeuvre — announcement tracker + troubleshooting assistant"
 requires-python = ">=3.10"
 dependencies = [
     "mcp[cli]>=1.0.0",
@@ -12,11 +12,11 @@ dependencies = [
 ]
 
 [project.scripts]
-sps-pipeline-bot = "sps_pipeline_bot.main:run"
+sps-manoeuvre = "sps_manoeuvre.__main__:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sps_pipeline_bot"]
+packages = ["src/sps_manoeuvre"]

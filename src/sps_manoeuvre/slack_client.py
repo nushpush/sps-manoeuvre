@@ -1,18 +1,23 @@
-"""Slack integration — read announcement channels and search troubleshooting threads.
+"""Slack integration — read channels, search threads, and post webhook alerts.
 
-Authentication: uses a Slack user token (xoxc-) + session cookie (d=...) extracted
-from your browser session. No Slack app registration or admin approval required —
-the calls are made as your own user identity.
+Authentication for reading: uses a Slack user token (xoxc-) + session cookie (d=...)
+extracted from your browser session. No Slack app registration required.
+
+Authentication for posting: uses an incoming webhook URL (SLACK_WEBHOOK_URL).
 
 Environment variables required:
   SLACK_USER_TOKEN   — your xoxc- token from browser DevTools
   SLACK_COOKIE       — your d= cookie value from browser DevTools
+  SLACK_WEBHOOK_URL  — incoming webhook URL for posting alerts
 """
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass, field
+
+import httpx
 from typing import Literal
 
 from slack_sdk import WebClient
@@ -72,7 +77,7 @@ def fetch_announcement_messages(limit: int = 20) -> list[SlackMessage]:
             continue
         try:
             history = client.conversations_history(channel=channel_id, limit=limit)
-        except SlackApiError:
+        except Exception:
             continue
 
         for msg in history.get("messages", []):
@@ -83,7 +88,7 @@ def fetch_announcement_messages(limit: int = 20) -> list[SlackMessage]:
             try:
                 pl = client.chat_getPermalink(channel=channel_id, message_ts=ts)
                 permalink = pl.get("permalink", "")
-            except SlackApiError:
+            except Exception:
                 permalink = ""
 
             username = ""
@@ -91,7 +96,7 @@ def fetch_announcement_messages(limit: int = 20) -> list[SlackMessage]:
                 try:
                     ui = client.users_info(user=user_id)
                     username = ui["user"].get("real_name") or ui["user"].get("name", "")
-                except SlackApiError:
+                except Exception:
                     pass
 
             results.append(
@@ -164,3 +169,63 @@ def search_troubleshooting(query: str, max_results: int = 10) -> list[SlackMessa
         )
 
     return results
+
+
+# ---------------------------------------------------------------------------
+# Webhook posting (outbound — no user token needed, uses SLACK_WEBHOOK_URL)
+# ---------------------------------------------------------------------------
+
+def post_webhook_alert(
+    repo: str,
+    summary: str,
+    suggested_change: str,
+    change_description: str,
+    pr_url: str | None,
+    announcement_permalink: str,
+) -> None:
+    """Post a repo-change alert via an incoming webhook URL."""
+    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+    if not webhook_url:
+        raise RuntimeError(
+            "SLACK_WEBHOOK_URL environment variable is not set.\n"
+            "Set it to the incoming webhook URL from your existing notification app."
+        )
+
+    pr_line = f"<{pr_url}|View PR>" if pr_url else "PR not yet created — use `create-pr` to raise one"
+
+    payload = {
+        "text": f"SPS Pipeline change required in `{repo}`",
+        "blocks": [
+            {
+                "type": "header",
+                "text": {"type": "plain_text", "text": "🔧 SPS Pipeline Change Required"},
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {"type": "mrkdwn", "text": f"*Repository:*\n`{repo}`"},
+                    {"type": "mrkdwn", "text": f"*Change:*\n{summary}"},
+                ],
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": (
+                        f"*What to do:* {suggested_change}\n\n"
+                        f"*Applied change:* {change_description}\n\n"
+                        f"*PR:* {pr_line}"
+                    ),
+                },
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {"type": "mrkdwn", "text": f"<{announcement_permalink}|View original announcement>"}
+                ],
+            },
+        ],
+    }
+
+    resp = httpx.post(webhook_url, content=json.dumps(payload), headers={"Content-Type": "application/json"})
+    resp.raise_for_status()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SPS Pipeline Bot — MCP server entry point.
+"""SPS Manoeuvre — MCP server entry point.
 
 All LLM reasoning is handled by Bob. These tools are pure data-fetch and action layers.
 
@@ -58,16 +58,14 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from .config import load_repos, save_repos
-from .diff_generator import build_file_context
-from .github_client import create_pull_request, scan_repos
-from .slack_client import fetch_announcement_messages, search_troubleshooting
+from .github_client import AnnouncementAnalysis, build_file_context, create_pull_request, push_file_changes, scan_repos, search_repo_content
+from .slack_client import fetch_announcement_messages, post_webhook_alert as _post_webhook, search_troubleshooting
 from .slack_token_refresh import refresh_slack_env
-from .webhook import post_webhook_alert as _post_webhook
 
 # Auto-refresh Slack tokens from the desktop app on startup
 refresh_slack_env()
 
-mcp = FastMCP("sps-pipeline-bot")
+mcp = FastMCP("sps-manoeuvre")
 
 
 # ---------------------------------------------------------------------------
@@ -132,7 +130,7 @@ def fetch_announcements(limit: int = 20) -> list[dict]:
 
     Channels monitored: #one-pipeline-announce, #devops-complines, #secure-pipelines-service
 
-    Returns messages not yet seen (tracked in ~/.bob/sps-state.json).
+    Returns messages not yet seen (tracked in .bob/sps-state.json).
     Each result includes: channel, ts, text, permalink, username.
 
     Bob should analyse each message text to determine:
@@ -242,6 +240,80 @@ def get_repo_files(repo: str, file_patterns: list[str]) -> dict:
         "file_contents": match.file_contents,
         "formatted": build_file_context(match.file_contents),
     }
+
+
+# ---------------------------------------------------------------------------
+# GitHub — search repo content by pattern (any file, any path)
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def search_repo_content_tool(
+    repo: str,
+    content_pattern: str,
+    file_extensions: list[str] | None = None,
+) -> dict:
+    """Search all files in a repo for lines matching a content pattern (regex).
+
+    Use this to find any usage of a variable, function, or string across the
+    entire repository — regardless of file path or name. Useful for:
+      - Finding all get_env calls that need migrating to get_secret
+      - Finding all usages of a renamed config key (e.g. mend-product-name)
+      - Finding any hardcoded value that needs updating
+      - Auditing any pattern across scripts, YAMLs, and config files
+
+    Args:
+        repo:             'ORG/NAME' repository.
+        content_pattern:  Regex pattern to search for (e.g. r'get_env\\s+\\w+token').
+        file_extensions:  Optional list to restrict search, e.g. ['.sh', '.yaml'].
+                          None = all files.
+
+    Returns:
+        Dict mapping file path -> list of {line, text} matches.
+    """
+    raw = search_repo_content(
+        repo_name=repo,
+        content_pattern=content_pattern,
+        file_extensions=file_extensions,
+    )
+    return {
+        "repo": repo,
+        "matches": {
+            path: [{"line": ln, "text": text} for ln, text in hits]
+            for path, hits in raw.items()
+        },
+        "total_files": len(raw),
+        "total_hits": sum(len(hits) for hits in raw.values()),
+    }
+
+
+@mcp.tool()
+def push_changes_to_branch(
+    repo: str,
+    branch_name: str,
+    file_changes: dict[str, str],
+    commit_message: str,
+) -> dict:
+    """Push file changes to an existing branch without creating a new PR.
+
+    Use this to update files on an already-open PR branch — for example to
+    add missing changes after the PR was created.
+
+    Args:
+        repo:           'ORG/NAME' repository.
+        branch_name:    Existing branch name (e.g. 'sps-bot/update-scan-config').
+        file_changes:   Dict mapping file paths to their complete new content.
+        commit_message: Commit message for the push.
+
+    Returns:
+        Dict with repo, branch, and per-file result ('updated' or 'created').
+    """
+    results = push_file_changes(
+        repo_name=repo,
+        branch_name=branch_name,
+        file_changes=file_changes,
+        commit_message=commit_message,
+    )
+    return {"repo": repo, "branch": branch_name, "files": results}
 
 
 # ---------------------------------------------------------------------------
