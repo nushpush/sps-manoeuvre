@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.sps-pipeline-bot.daily-run</string>
+    <string>com.sps-manoeuvre.daily-run</string>
 
     <!-- IMPORTANT: Update the path below to your actual project location before installing.
-         Install with: cp scripts/com.sps-pipeline-bot.daily-run.plist ~/Library/LaunchAgents/
-                       launchctl load ~/Library/LaunchAgents/com.sps-pipeline-bot.daily-run.plist -->
+         Install with: cp scripts/com.sps-manoeuvre.daily-run.plist ~/Library/LaunchAgents/
+                       launchctl load ~/Library/LaunchAgents/com.sps-manoeuvre.daily-run.plist -->
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/path/to/sps-pipeline-bot/scripts/daily-run.sh</string>
+        <string>/path/to/sps-manoeuvre/scripts/daily-run.sh</string>
     </array>
 
     <!-- Run every day at 09:00 local time -->
@@ -24,9 +24,9 @@
     </dict>
 
     <key>StandardOutPath</key>
-    <string>/path/to/sps-pipeline-bot/.bob/daily-run.log</string>
+    <string>/path/to/sps-manoeuvre/.bob/daily-run.log</string>
     <key>StandardErrorPath</key>
-    <string>/path/to/sps-pipeline-bot/.bob/daily-run.log</string>
+    <string>/path/to/sps-manoeuvre/.bob/daily-run.log</string>
 
     <!-- Run even if the machine was asleep at the scheduled time -->
     <key>RunAtLoad</key>

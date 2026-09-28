@@ -1,8 +1,8 @@
-"""Interactive setup wizard for SPS Pipeline Bot.
+"""Interactive setup wizard for SPS Manoeuvre.
 
 Run as:
-    python -m sps_pipeline_bot --setup
-    sps-pipeline-bot --setup
+    python -m sps_manoeuvre --setup
+    sps-manoeuvre --setup
 
 Performs idempotent initial environment checks, configuration scaffolding,
 and optional token bootstrapping.
@@ -84,7 +84,7 @@ def setup_mcp_config(interactive: bool = True) -> bool:
         try:
             with _MCP_JSON.open() as fh:
                 data = json.load(fh)
-                server_cfg = data.get("mcpServers", {}).get("sps-pipeline-bot", {})
+                server_cfg = data.get("mcpServers", {}).get("sps-manoeuvre", {})
                 existing_env = server_cfg.get("env", {})
         except Exception:
             existing_env = {}
@@ -140,9 +140,9 @@ def setup_mcp_config(interactive: bool = True) -> bool:
 
     mcp_data = {
         "mcpServers": {
-            "sps-pipeline-bot": {
+            "sps-manoeuvre": {
                 "command": python_path,
-                "args": ["-m", "sps_pipeline_bot"],
+                "args": ["-m", "sps_manoeuvre"],
                 "cwd": src_dir,
                 "env": env_config,
             }
@@ -201,14 +201,14 @@ def setup_slack_bootstrap() -> bool:
         return True
     except Exception as exc:
         print(f"  ⚠️  Slack bootstrap failed: {exc}")
-        print("  You can run 'python -m sps_pipeline_bot --bootstrap' in terminal later.")
+        print("  You can run 'python -m sps_manoeuvre --bootstrap' in terminal later.")
         return False
 
 
 def run(interactive: bool = True) -> int:
     """Run the complete setup wizard."""
     print("=" * 60)
-    print("🤖 SPS Pipeline Bot — Setup Wizard")
+    print("🤖 SPS Manoeuvre — Setup Wizard")
     print("=" * 60)
 
     py_ok = check_python_version()
@@ -221,9 +221,9 @@ def run(interactive: bool = True) -> int:
     print("🎉 Setup Wizard Complete!")
     print("=" * 60)
     print("Summary & Next Steps:")
-    print(" 1. Verify/edit your watched repos in src/sps_pipeline_bot/repos.json")
-    print(" 2. Run diagnostic health check: sps-pipeline-bot --doctor")
-    print(" 3. Run announcement scan:       sps-pipeline-bot --run")
+    print(" 1. Verify/edit your watched repos in src/sps_manoeuvre/repos.json")
+    print(" 2. Run diagnostic health check: sps-manoeuvre --doctor")
+    print(" 3. Run announcement scan:       sps-manoeuvre --run")
     print("=" * 60)
     return 0 if py_ok else 1
 

@@ -1,4 +1,4 @@
-"""Allow running as: python -m sps_pipeline_bot [--setup | --doctor | --bootstrap | --run | --monitor]
+"""Allow running as: python -m sps_manoeuvre [--setup | --doctor | --bootstrap | --run | --monitor]
 
   --setup       Interactive setup wizard for first-time configuration.
   --doctor      Diagnostic health check verifying tokens, packages, and connectivity.

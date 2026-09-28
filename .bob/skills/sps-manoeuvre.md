@@ -1,15 +1,15 @@
 ---
-name: sps-pipeline-bot
+name: sps-manoeuvre
 description: >
   Use this skill when the user wants to check for SPS/One Pipeline announcements,
   troubleshoot a pipeline build failure, apply pipeline changes to repos, raise
   a PR for a pipeline-related fix, or manage the automated monitor. Activates the
-  sps-pipeline-bot MCP tools.
+  sps-manoeuvre MCP tools.
 ---
 
-# SPS Pipeline Bot Skill
+# SPS Manoeuvre Skill
 
-You have access to the `sps-pipeline-bot` MCP server. Use the tools below to help
+You have access to the `sps-manoeuvre` MCP server. Use the tools below to help
 the user with three distinct workflows.
 
 ---
@@ -108,7 +108,7 @@ something isn't working in their SPS/One Pipeline build.
 **Trigger:** User asks about pipeline failures, wants to know if the bot is watching
 for failures, or asks about the `--monitor` mode.
 
-The bot has two automated runner modes (invoked via `python3 -m sps_pipeline_bot`):
+The bot has two automated runner modes (invoked via `python3 -m sps_manoeuvre`):
 
 | Flag | What it does |
 |---|---|

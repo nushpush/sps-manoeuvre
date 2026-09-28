@@ -1,5 +1,5 @@
-# SPS Pipeline Bot — Team Configuration Override
-# Copy this file to config.yaml (or src/sps_pipeline_bot/config.yaml) to customize
+# SPS Manoeuvre — Team Configuration Override
+# Copy this file to config.yaml (or src/sps_manoeuvre/config.yaml) to customize
 # channel settings for your specific team or workspace.
 #
 # If config.yaml is absent, defaults configured in config.py are used.

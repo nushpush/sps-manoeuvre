@@ -1,4 +1,4 @@
-"""Unit tests for SPS Pipeline Bot setup wizard."""
+"""Unit tests for SPS Manoeuvre setup wizard."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from sps_pipeline_bot import setup_wizard
+from sps_manoeuvre import setup_wizard
 
 
 class TestSetupWizard(unittest.TestCase):
@@ -42,7 +42,7 @@ class TestSetupWizard(unittest.TestCase):
                 with tmp_mcp.open() as fh:
                     data1 = json.load(fh)
                 self.assertIn("mcpServers", data1)
-                self.assertIn("sps-pipeline-bot", data1["mcpServers"])
+                self.assertIn("sps-manoeuvre", data1["mcpServers"])
 
                 # Second run (idempotency check)
                 res2 = setup_wizard.setup_mcp_config(interactive=False)

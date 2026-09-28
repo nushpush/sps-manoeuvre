@@ -1,4 +1,4 @@
-# SPS Pipeline Bot — Quick-Start Setup
+# SPS Manoeuvre — Quick-Start Setup
 
 Full documentation is in [README.md](README.md). This page is a condensed checklist for getting up and running quickly.
 
@@ -18,8 +18,8 @@ Full documentation is in [README.md](README.md). This page is a condensed checkl
 ## 1. Install
 
 ```bash
-git clone https://github.ibm.com/anushka-p/sps-pipeline-bot.git
-cd sps-pipeline-bot
+git clone https://github.ibm.com/anushka-p/sps-manoeuvre.git
+cd sps-manoeuvre
 pip3 install -e .
 ```
 
@@ -27,7 +27,7 @@ pip3 install -e .
 
 ```bash
 cd src
-python3 -m sps_pipeline_bot --bootstrap
+python3 -m sps_manoeuvre --bootstrap
 ```
 
 Click **Allow** in the macOS Keychain dialog.
@@ -37,10 +37,10 @@ Click **Allow** in the macOS Keychain dialog.
 ```json
 {
   "mcpServers": {
-    "sps-pipeline-bot": {
+    "sps-manoeuvre": {
       "command": "python3",
-      "args": ["-m", "sps_pipeline_bot"],
-      "cwd": "/absolute/path/to/sps-pipeline-bot/src",
+      "args": ["-m", "sps_manoeuvre"],
+      "cwd": "/absolute/path/to/sps-manoeuvre/src",
       "env": {
         "GITHUB_TOKEN": "ghp_your-token-here",
         "SLACK_WEBHOOK_URL": "https://hooks.slack.com/services/T.../B.../...",
@@ -55,7 +55,7 @@ Click **Allow** in the macOS Keychain dialog.
 
 ## 4. Add repos to the watchlist
 
-Edit `src/sps_pipeline_bot/repos.json`:
+Edit `src/sps_manoeuvre/repos.json`:
 
 ```json
 {

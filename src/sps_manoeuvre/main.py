@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SPS Pipeline Bot — MCP server entry point.
+"""SPS Manoeuvre — MCP server entry point.
 
 All LLM reasoning is handled by Bob. These tools are pure data-fetch and action layers.
 
@@ -65,7 +65,7 @@ from .slack_token_refresh import refresh_slack_env
 # Auto-refresh Slack tokens from the desktop app on startup
 refresh_slack_env()
 
-mcp = FastMCP("sps-pipeline-bot")
+mcp = FastMCP("sps-manoeuvre")
 
 
 # ---------------------------------------------------------------------------

@@ -36,4 +36,4 @@ build/
 docs/sps-bot-animation.html
 
 # Repo watchlist — each user maintains their own local copy (see repos.json.example)
-src/sps_pipeline_bot/repos.json
+src/sps_manoeuvre/repos.json

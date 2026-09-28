@@ -1,4 +1,4 @@
-"""Unit tests for SPS Pipeline Bot doctor command and config loading."""
+"""Unit tests for SPS Manoeuvre doctor command and config loading."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from sps_pipeline_bot import doctor
-from sps_pipeline_bot.config import _load_yaml_config, _parse_simple_yaml
+from sps_manoeuvre import doctor
+from sps_manoeuvre.config import _load_yaml_config, _parse_simple_yaml
 
 
 class TestDoctor(unittest.TestCase):

@@ -1,4 +1,4 @@
-# SPS Pipeline Bot — POC & Feature Overview
+# SPS Manoeuvre — POC & Feature Overview
 
 **Document type:** Internal Engineering POC  
 **Status:** Proof of Concept — validated, production-hardened, available for team adoption  
@@ -12,7 +12,7 @@ IBM Cloud Secure Pipeline Service (SPS) is the standard CI/CD platform for IBM Z
 
 Today, that entire chain is a manual, human-driven process. Announcements can sit unread for days. The translation from "SPS announcement" to "PR on the right repository" requires both SPS expertise and repository knowledge that not every engineer on every team possesses.
 
-**SPS Pipeline Bot automates that chain.** It monitors the SPS announcement channels, classifies incoming messages, identifies which watched repositories are affected, surfaces the required change for engineer review, and — on explicit confirmation — raises a pull request. A parallel capability monitors pipeline execution and surfaces failure context or relevant troubleshooting threads when a build fails.
+**SPS Manoeuvre automates that chain.** It monitors the SPS announcement channels, classifies incoming messages, identifies which watched repositories are affected, surfaces the required change for engineer review, and — on explicit confirmation — raises a pull request. A parallel capability monitors pipeline execution and surfaces failure context or relevant troubleshooting threads when a build fails.
 
 The tool is implemented as an IBM Bob MCP server. Bob (the AI assistant) provides reasoning; the bot provides the data layer and action layer. The result is a workflow where an engineer can go from "there's a new SPS announcement" to "PRs raised across all affected repos" through a guided conversation.
 
@@ -45,7 +45,7 @@ When an announcement does arrive, the manual process looks approximately like th
 
 ## 3. Proposed Solution
 
-SPS Pipeline Bot operates as a bridge between SPS announcements and repository changes, with a human review boundary at the point of code modification.
+SPS Manoeuvre operates as a bridge between SPS announcements and repository changes, with a human review boundary at the point of code modification.
 
 ```
 IBM SPS Announcement Channels (Slack)
@@ -114,7 +114,7 @@ flowchart TD
         OUT["Team output channel\n(via webhook)"]
     end
 
-    subgraph Bot["SPS Pipeline Bot"]
+    subgraph Bot["SPS Manoeuvre"]
         MCP["MCP Server\n(Bob calls tools)"]
         CL["slack_client.py\nfetch / search / post"]
         GH["github_client.py\nscan / read / PR / push"]
@@ -378,7 +378,7 @@ This POC demonstrates the following technical capabilities:
 | **Pipeline monitoring** | Engineer watches pipeline notification channel; navigates IBM Cloud UI for log context | Automated polling detects failures; logs retrieved and parsed automatically |
 | **Failure awareness** | Delayed — engineer notices only when actively watching Slack | Near-real-time: failure posted to team channel within 5 minutes of notification |
 | **Troubleshooting** | Engineer manually browses 5 specialist channels | Keyword search across all 5 channels returns relevant resolved threads |
-| **Onboarding / configuration** | Multiple manual file edits; no validation step | `sps-pipeline-bot --setup` wizard + `sps-pipeline-bot --doctor` preflight report |
+| **Onboarding / configuration** | Multiple manual file edits; no validation step | `sps-manoeuvre --setup` wizard + `sps-manoeuvre --doctor` preflight report |
 
 ---
 
@@ -426,9 +426,9 @@ This POC has undergone a production-hardening cycle. Key improvements over the i
 
 | Area | Status |
 |---|---|
-| Installation | `pip install -e .` from repo root; `sps-pipeline-bot` CLI entry point installed |
-| Onboarding | `sps-pipeline-bot --setup` interactive wizard; idempotent |
-| Preflight validation | `sps-pipeline-bot --doctor` — 9 PASS/WARN/FAIL checks |
+| Installation | `pip install -e .` from repo root; `sps-manoeuvre` CLI entry point installed |
+| Onboarding | `sps-manoeuvre --setup` interactive wizard; idempotent |
+| Preflight validation | `sps-manoeuvre --doctor` — 9 PASS/WARN/FAIL checks |
 | Configuration | `.bob/mcp.json` for credentials; optional `config.yaml` for team-level overrides |
 | Credential handling | No secrets committed; AES key cache `chmod 600`; tokens never logged |
 | Error handling | Per-repo error isolation; defensive Slack metadata retrieval |
@@ -445,20 +445,20 @@ This POC has undergone a production-hardening cycle. Key improvements over the i
 A new team can be up and running in under 10 minutes:
 
 ```
-git clone https://github.ibm.com/anushka-p/sps-pipeline-bot.git
-cd sps-pipeline-bot
+git clone https://github.ibm.com/anushka-p/sps-manoeuvre.git
+cd sps-manoeuvre
 pip install -e .
         ↓
-sps-pipeline-bot --setup
+sps-manoeuvre --setup
 (interactive: enter GitHub PAT, Slack webhook URL, IBM Cloud API key)
         ↓
-sps-pipeline-bot --doctor
+sps-manoeuvre --doctor
 (confirms all 9 checks pass before first run)
         ↓
-edit src/sps_pipeline_bot/repos.json
+edit src/sps_manoeuvre/repos.json
 (add your team's repositories)
         ↓
-sps-pipeline-bot --run
+sps-manoeuvre --run
 (fetch announcements, scan repos, post alerts)
 ```
 

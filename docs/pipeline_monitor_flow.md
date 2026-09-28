@@ -1,4 +1,4 @@
-# SPS Pipeline Bot — Full Application Flow
+# SPS Manoeuvre — Full Application Flow
 
 This document describes the complete flow of both modes of the bot.
 
@@ -7,7 +7,7 @@ This document describes the complete flow of both modes of the bot.
 ## Architecture overview
 
 ```
-python3 -m sps_pipeline_bot
+python3 -m sps_manoeuvre
         │
         ├── (no flag)    → main.py          MCP server — Bob calls tools interactively
         ├── --bootstrap  → slack_token_refresh.py  One-time key setup
@@ -36,7 +36,7 @@ python3 -m sps_pipeline_bot
 | `.bob/mcp.json` | Secrets: `GITHUB_TOKEN`, `SLACK_WEBHOOK_URL`, `IBM_CLOUD_API_KEY` |
 | `.bob/slack-key.bin` | Cached AES key (derived from macOS Keychain on `--bootstrap`) |
 | `.bob/sps-state.json` | Processed Slack timestamps (prevents re-processing) |
-| `src/sps_pipeline_bot/repos.json` | Watched repos list |
+| `src/sps_manoeuvre/repos.json` | Watched repos list |
 
 ---
 
@@ -46,7 +46,7 @@ Runs once on a schedule. Fetches new SPS announcements, scans repos, posts alert
 
 ```mermaid
 flowchart TD
-    START(["python3 -m sps_pipeline_bot --run"])
+    START(["python3 -m sps_manoeuvre --run"])
 
     A["① refresh_slack_env()\nLoad SLACK_USER_TOKEN + SLACK_COOKIE\nfrom Slack desktop app on disk"]
 

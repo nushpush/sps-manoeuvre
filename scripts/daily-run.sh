@@ -34,11 +34,11 @@ while IFS= read -r line; do
 done < <("$PYTHON" -c "
 import json, sys
 with open('$MCP_JSON') as f:
-    env = json.load(f)['mcpServers']['sps-pipeline-bot']['env']
+    env = json.load(f)['mcpServers']['sps-manoeuvre']['env']
 for k, v in env.items():
     print(f'{k}={v}')
 ")
 
 cd "$SRC_DIR"
-"$PYTHON" -m sps_pipeline_bot --run >> "$LOG_FILE" 2>&1
+"$PYTHON" -m sps_manoeuvre --run >> "$LOG_FILE" 2>&1
 echo "--- exit $? ---" >> "$LOG_FILE"

@@ -1,4 +1,4 @@
-# SPS Pipeline Bot — Full Automation Setup & Prerequisites
+# SPS Manoeuvre — Full Automation Setup & Prerequisites
 
 > **Core principle:** The user grants *permissions*, not secrets.
 > The bot authenticates using IBM Cloud Trusted Profile + workload identity — the compute environment *is* the credential.
@@ -27,7 +27,7 @@ The only things the user ever *gives* the service are non-secret identifiers: Se
 > **Who:** User + manager approval
 > **When:** Once
 
-- Request a non-personal w3 identity (e.g. `sps-pipeline-bot@ibm.com`) via the IBM IAM Provisioning Tool
+- Request a non-personal w3 identity (e.g. `sps-manoeuvre@ibm.com`) via the IBM IAM Provisioning Tool
 - Business justification: automated pipeline monitoring service
 - This ID will own all IBM Cloud resources the bot uses
 
@@ -111,7 +111,7 @@ Provide these non-secret identifiers in the bot's config:
 4. Grant the bot's Trusted Profile `SecretsReader` access to it
 
 **Option B — Developer Mac only (current approach):**
-- Each developer runs `python3 -m sps_pipeline_bot --bootstrap` once
+- Each developer runs `python3 -m sps_manoeuvre --bootstrap` once
 - Token is extracted from the Slack desktop app and cached in macOS Keychain — never leaves the machine
 
 **What the user provides:** Workspace admin approval + token stored in their own SM  

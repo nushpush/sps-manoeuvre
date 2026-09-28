@@ -6,13 +6,13 @@ No browser interaction or manual copy-paste needed. Works as long as:
   - The user is logged in to Slack
 
 On first run, requires the AES key to be bootstrapped via:
-    python3 -m sps_pipeline_bot.slack_token_refresh --bootstrap
+    python3 -m sps_manoeuvre.slack_token_refresh --bootstrap
 which calls `security` once in a terminal context (where Keychain access is
 already granted) and caches the derived AES key to ~/.bob/slack-key.bin.
 Subsequent runs read the cached key — no Keychain or subprocess needed.
 
 Usage:
-    from sps_pipeline_bot.slack_token_refresh import refresh_slack_env
+    from sps_manoeuvre.slack_token_refresh import refresh_slack_env
     refresh_slack_env()   # injects SLACK_USER_TOKEN + SLACK_COOKIE into os.environ
 """
 
@@ -84,7 +84,7 @@ def bootstrap() -> None:
     """One-time setup: derive and cache the AES key from Keychain.
 
     Run this once from a terminal where Keychain access is already granted:
-        python3 -m sps_pipeline_bot.slack_token_refresh --bootstrap
+        python3 -m sps_manoeuvre.slack_token_refresh --bootstrap
     """
     password = _keychain_password()
     key = _derive_key(password)
@@ -119,7 +119,7 @@ def _read_xoxd() -> str | None:
     if key is None:
         raise RuntimeError(
             "Slack AES key not found. Run bootstrap first:\n"
-            "  python3 -m sps_pipeline_bot.slack_token_refresh --bootstrap"
+            "  python3 -m sps_manoeuvre.slack_token_refresh --bootstrap"
         )
     if not _COOKIES_DB.exists():
         return None

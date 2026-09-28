@@ -1,6 +1,6 @@
 # Production Readiness & Operational Audit Report
 
-**Service / Component:** SPS Pipeline Bot  
+**Service / Component:** SPS Manoeuvre  
 **Target Audience:** Engineering Leads, Multi-team Adopters, DevOps Operations  
 **Evaluation Standard:** Enterprise Production Readiness & Multi-Team Portability  
 
@@ -29,18 +29,18 @@ Prior to this hardening cycle, the repository was configured for single-develope
 
 | Component | Issue Identified | Resolution Implemented |
 |---|---|---|
-| **CLI & Packaging** | `pyproject.toml` pointed CLI binary to `main:run` (server only) | Updated `[project.scripts]` to `sps_pipeline_bot.__main__:main` supporting `--setup`, `--doctor`, `--bootstrap`, `--run`, `--monitor`. |
-| **Onboarding** | No automated configuration scaffolding | Created [`setup_wizard.py`](src/sps_pipeline_bot/setup_wizard.py) (`--setup`) with idempotent `.bob/` creation, credential prompting, and auto-bootstrapping. |
-| **Health Checks** | No way to test if credentials and permissions worked before running | Created [`doctor.py`](src/sps_pipeline_bot/doctor.py) (`--doctor`) testing 9 distinct subsystems with PASS/WARN/FAIL reporting and actionable remediation instructions. |
-| **Configuration** | Channel IDs and notification targets were hardcoded | Introduced [`config.yaml.example`](src/sps_pipeline_bot/config.yaml.example) and backward-compatible optional `config.yaml` override loading in [`config.py`](src/sps_pipeline_bot/config.py). |
-| **GitHub Scanner** | Exception during threaded repo scan crashed thread pool loop | Hardened error handling in [`scan_repos()`](src/sps_pipeline_bot/github_client.py:146) to isolate failures per repo and log warnings. |
-| **Slack History** | Permalinks / user info lookups could fail on unusual channel messages | Broadened exception handling in [`slack_client.py`](src/sps_pipeline_bot/slack_client.py:74) to guarantee uninterrupted message processing. |
+| **CLI & Packaging** | `pyproject.toml` pointed CLI binary to `main:run` (server only) | Updated `[project.scripts]` to `sps_manoeuvre.__main__:main` supporting `--setup`, `--doctor`, `--bootstrap`, `--run`, `--monitor`. |
+| **Onboarding** | No automated configuration scaffolding | Created [`setup_wizard.py`](src/sps_manoeuvre/setup_wizard.py) (`--setup`) with idempotent `.bob/` creation, credential prompting, and auto-bootstrapping. |
+| **Health Checks** | No way to test if credentials and permissions worked before running | Created [`doctor.py`](src/sps_manoeuvre/doctor.py) (`--doctor`) testing 9 distinct subsystems with PASS/WARN/FAIL reporting and actionable remediation instructions. |
+| **Configuration** | Channel IDs and notification targets were hardcoded | Introduced [`config.yaml.example`](src/sps_manoeuvre/config.yaml.example) and backward-compatible optional `config.yaml` override loading in [`config.py`](src/sps_manoeuvre/config.py). |
+| **GitHub Scanner** | Exception during threaded repo scan crashed thread pool loop | Hardened error handling in [`scan_repos()`](src/sps_manoeuvre/github_client.py:146) to isolate failures per repo and log warnings. |
+| **Slack History** | Permalinks / user info lookups could fail on unusual channel messages | Broadened exception handling in [`slack_client.py`](src/sps_manoeuvre/slack_client.py:74) to guarantee uninterrupted message processing. |
 
 ---
 
 ## 3. Remaining Manual Steps & Why They Cannot Be Automated
 
-While configuration generation is now automated via `sps-pipeline-bot --setup`, the following manual actions remain necessary due to security and identity constraints:
+While configuration generation is now automated via `sps-manoeuvre --setup`, the following manual actions remain necessary due to security and identity constraints:
 
 1. **Generating a GitHub Personal Access Token (PAT):**
    - *Why:* GitHub Enterprise requires personal authentication and explicit user consent to issue tokens with `repo` scopes.

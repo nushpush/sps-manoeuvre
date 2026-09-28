@@ -1,8 +1,8 @@
-"""Diagnostic doctor command for SPS Pipeline Bot.
+"""Diagnostic doctor command for SPS Manoeuvre.
 
 Run as:
-    python -m sps_pipeline_bot --doctor
-    sps-pipeline-bot --doctor
+    python -m sps_manoeuvre --doctor
+    sps-manoeuvre --doctor
 
 Performs checks and outputs PASS/WARN/FAIL status with actionable remedies.
 Never logs or prints secrets.
@@ -81,7 +81,7 @@ def _load_env_from_mcp_json() -> dict[str, str]:
     try:
         with _MCP_JSON.open() as fh:
             data = json.load(fh)
-            return data.get("mcpServers", {}).get("sps-pipeline-bot", {}).get("env", {})
+            return data.get("mcpServers", {}).get("sps-manoeuvre", {}).get("env", {})
     except Exception:
         return {}
 
@@ -92,7 +92,7 @@ def check_mcp_json() -> CheckResult:
         return CheckResult(
             "FAIL",
             f"{_MCP_JSON} does not exist",
-            "Run setup wizard: python -m sps_pipeline_bot --setup",
+            "Run setup wizard: python -m sps_manoeuvre --setup",
         )
 
     env = _load_env_from_mcp_json()
@@ -110,7 +110,7 @@ def check_mcp_json() -> CheckResult:
         return CheckResult(
             "FAIL",
             f"Missing required configuration key(s): {', '.join(missing_keys)}",
-            "Update .bob/mcp.json or run: python -m sps_pipeline_bot --setup",
+            "Update .bob/mcp.json or run: python -m sps_manoeuvre --setup",
         )
 
     return CheckResult("PASS", ".bob/mcp.json exists with required keys")
@@ -136,7 +136,7 @@ def check_slack_key() -> CheckResult:
     return CheckResult(
         "FAIL",
         f"Slack AES key not cached ({_SLACK_KEY} missing)",
-        "Run: python -m sps_pipeline_bot --bootstrap",
+        "Run: python -m sps_manoeuvre --bootstrap",
     )
 
 
@@ -231,13 +231,13 @@ def check_slack_connectivity() -> CheckResult:
         return CheckResult(
             "FAIL",
             f"Slack read failed: {resp.get('error', 'unknown error')}",
-            "Re-run 'python -m sps_pipeline_bot --bootstrap' or check Slack login status.",
+            "Re-run 'python -m sps_manoeuvre --bootstrap' or check Slack login status.",
         )
     except Exception as exc:
         return CheckResult(
             "FAIL",
             f"Slack connectivity check failed: {exc}",
-            "Run 'python -m sps_pipeline_bot --bootstrap' to refresh cached credentials.",
+            "Run 'python -m sps_manoeuvre --bootstrap' to refresh cached credentials.",
         )
 
 
@@ -257,7 +257,7 @@ def check_ibmcloud_api_key() -> CheckResult:
 def run() -> int:
     """Execute all diagnostic checks and print report."""
     print("=" * 65)
-    print("🩺 SPS Pipeline Bot — Diagnostic Doctor")
+    print("🩺 SPS Manoeuvre — Diagnostic Doctor")
     print("=" * 65)
 
     checks = [
@@ -304,7 +304,7 @@ def run() -> int:
         print("=" * 65)
         return 0
     else:
-        print("🎉 All checks PASSED! SPS Pipeline Bot is ready for production use.")
+        print("🎉 All checks PASSED! SPS Manoeuvre is ready for production use.")
         print("=" * 65)
         return 0
 
