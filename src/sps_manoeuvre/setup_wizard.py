@@ -23,8 +23,6 @@ _MCP_JSON = _BOB_DIR / "mcp.json"
 _REPOS_FILE = Path(__file__).resolve().parent / "repos.json"
 _REPOS_EXAMPLE = Path(__file__).resolve().parent / "repos.json.example"
 
-_SLACK_DESKTOP_DIR = Path.home() / "Library/Application Support/Slack"
-
 _REQUIRED_PACKAGES = [
     ("mcp", "mcp"),
     ("slack_sdk", "slack-sdk"),
@@ -89,18 +87,13 @@ def setup_mcp_config(interactive: bool = True) -> bool:
         except Exception:
             existing_env = {}
 
-    # Detect whether Slack desktop auto-refresh will work at runtime.
-    # If not, we must prompt for the tokens now so --run doesn't fail later.
-    slack_desktop_available = sys.platform == "darwin" and _SLACK_DESKTOP_DIR.exists()
-
     if existing_env:
         print(f"\n⚙️  Found existing MCP configuration ({_MCP_JSON}):")
         print(f"  GITHUB_TOKEN:      {_mask_secret(existing_env.get('GITHUB_TOKEN', ''))}")
         print(f"  SLACK_WEBHOOK_URL: {_mask_secret(existing_env.get('SLACK_WEBHOOK_URL', ''))}")
+        print(f"  SLACK_USER_TOKEN:  {_mask_secret(existing_env.get('SLACK_USER_TOKEN', ''))}")
+        print(f"  SLACK_COOKIE:      {_mask_secret(existing_env.get('SLACK_COOKIE', ''))}")
         print(f"  IBM_CLOUD_API_KEY: {_mask_secret(existing_env.get('IBM_CLOUD_API_KEY', ''))}")
-        if not slack_desktop_available:
-            print(f"  SLACK_USER_TOKEN:  {_mask_secret(existing_env.get('SLACK_USER_TOKEN', ''))}")
-            print(f"  SLACK_COOKIE:      {_mask_secret(existing_env.get('SLACK_COOKIE', ''))}")
 
         if interactive and sys.stdin.isatty():
             try:
@@ -137,19 +130,18 @@ def setup_mcp_config(interactive: bool = True) -> bool:
             if val:
                 ibmcloud_key = val
 
-            if not slack_desktop_available:
-                print("\n  ℹ️  Slack desktop app not detected — manual token entry required.")
-                print("  Open Slack in Chrome → DevTools (F12) → Network tab → any api.slack.com request:")
-                print("    Authorization header → xoxc-... value  →  SLACK_USER_TOKEN")
-                print("    Cookie header        → d=xoxd-... part →  SLACK_COOKIE")
-                prompt_ut = f"Slack User Token (xoxc-...) [{_mask_secret(slack_user_token)}]: " if slack_user_token else "Slack User Token (xoxc-...): "
-                val = input(prompt_ut).strip()
-                if val:
-                    slack_user_token = val
-                prompt_ck = f"Slack Cookie (xoxd-...) [{_mask_secret(slack_cookie)}]: " if slack_cookie else "Slack Cookie (xoxd-...): "
-                val = input(prompt_ck).strip()
-                if val:
-                    slack_cookie = val
+            print("\n  ℹ️  Open Slack in Chrome → DevTools (F12) → Network tab → any api.slack.com request:")
+            print("    Authorization header → xoxc-... value  →  SLACK_USER_TOKEN")
+            print("    Cookie header        → d=xoxd-... part →  SLACK_COOKIE")
+            print("    (See SETUP.md → Getting credentials for detailed steps)")
+            prompt_ut = f"Slack User Token (xoxc-...) [{_mask_secret(slack_user_token)}]: " if slack_user_token else "Slack User Token (xoxc-...): "
+            val = input(prompt_ut).strip()
+            if val:
+                slack_user_token = val
+            prompt_ck = f"Slack Cookie (xoxd-...) [{_mask_secret(slack_cookie)}]: " if slack_cookie else "Slack Cookie (xoxd-...): "
+            val = input(prompt_ck).strip()
+            if val:
+                slack_cookie = val
 
         except (EOFError, KeyboardInterrupt):
             print("\nSetup cancelled.")

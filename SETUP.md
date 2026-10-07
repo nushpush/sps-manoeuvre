@@ -29,6 +29,16 @@ pip3 install -e .
 sps-manoeuvre --setup
 ```
 
+The wizard will prompt for the following values:
+
+| Prompt | Where to get it |
+|---|---|
+| **GitHub Personal Access Token** | [github.ibm.com/settings/tokens](https://github.ibm.com/settings/tokens) → Generate new token (classic) → scope: `repo` |
+| **Slack Incoming Webhook URL** | [api.slack.com/apps](https://api.slack.com/apps) → your app → Incoming Webhooks → Add New Webhook → copy the `https://hooks.slack.com/services/...` URL |
+| **Slack User Token (`xoxc-...`)** | Open [app.slack.com](https://app.slack.com) in Chrome → DevTools (`F12`) → Network tab → click any channel → filter `api.slack.com` → click any request → Request Headers → `Authorization` → copy the value **after** `Bearer ` |
+| **Slack Cookie (`xoxd-...`)** | Same request as above → `Cookie` header → find `d=xoxd-...` → copy the value **after** `d=` |
+| **IBM Cloud API Key** *(optional)* | [cloud.ibm.com/iam/apikeys](https://cloud.ibm.com/iam/apikeys) → Create → copy the key |
+
 ## 3. Add repos to the watchlist
 
 Edit `src/sps_manoeuvre/repos.json`:

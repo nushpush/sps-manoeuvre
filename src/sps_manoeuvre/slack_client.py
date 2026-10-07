@@ -50,7 +50,7 @@ def _get_client() -> WebClient:
     if not token:
         raise RuntimeError(
             "SLACK_USER_TOKEN environment variable is not set.\n"
-            "See SLACK-SETUP.md for how to extract your user token from the browser."
+            "Run 'sps-manoeuvre --setup' to configure your Slack tokens."
         )
     cookie = os.environ.get("SLACK_COOKIE", "")
     headers = {"Cookie": f"d={cookie}"} if cookie else {}

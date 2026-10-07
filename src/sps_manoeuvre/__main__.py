@@ -1,8 +1,7 @@
-"""Allow running as: python -m sps_manoeuvre [--setup | --doctor | --bootstrap | --run | --monitor]
+"""Allow running as: python -m sps_manoeuvre [--setup | --doctor | --run | --monitor]
 
   --setup       Interactive setup wizard for first-time configuration.
   --doctor      Diagnostic health check verifying tokens, packages, and connectivity.
-  --bootstrap   One-time setup: derive and cache the Slack AES key from Keychain.
   --run         Fetch announcements → scan repos → post alerts (runs once).
   --monitor     Watch pipeline notifications for failures, fetch logs, and post findings.
   (no flag)     Start the MCP server (for use inside Bob).
