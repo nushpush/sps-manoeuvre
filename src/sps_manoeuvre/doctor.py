@@ -27,7 +27,6 @@ from .config import (
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _BOB_DIR = _PROJECT_ROOT / ".bob"
 _MCP_JSON = _BOB_DIR / "mcp.json"
-_SLACK_KEY = _BOB_DIR / "slack-key.bin"
 _REPOS_FILE = Path(__file__).resolve().parent / "repos.json"
 
 
@@ -117,26 +116,16 @@ def check_mcp_json() -> CheckResult:
 
 
 def check_slack_key() -> CheckResult:
-    """Verify .bob/slack-key.bin exists on macOS."""
-    if sys.platform != "darwin":
-        # On non-macOS, check if SLACK_USER_TOKEN and SLACK_COOKIE are configured
-        env = _load_env_from_mcp_json()
-        has_user_tok = env.get("SLACK_USER_TOKEN") or os.environ.get("SLACK_USER_TOKEN")
-        has_cookie = env.get("SLACK_COOKIE") or os.environ.get("SLACK_COOKIE")
-        if has_user_tok and has_cookie:
-            return CheckResult("PASS", "SLACK_USER_TOKEN and SLACK_COOKIE configured (non-macOS)")
-        return CheckResult(
-            "WARN",
-            "Non-macOS system without SLACK_USER_TOKEN and SLACK_COOKIE configured",
-            "If channel reading is required on Linux/Windows, provide SLACK_USER_TOKEN and SLACK_COOKIE in .bob/mcp.json",
-        )
-
-    if _SLACK_KEY.exists():
-        return CheckResult("PASS", f"Cached Slack AES key found at {_SLACK_KEY}")
+    """Verify SLACK_USER_TOKEN and SLACK_COOKIE are configured."""
+    env = _load_env_from_mcp_json()
+    has_user_tok = env.get("SLACK_USER_TOKEN") or os.environ.get("SLACK_USER_TOKEN")
+    has_cookie = env.get("SLACK_COOKIE") or os.environ.get("SLACK_COOKIE")
+    if has_user_tok and has_cookie:
+        return CheckResult("PASS", "SLACK_USER_TOKEN and SLACK_COOKIE are configured")
     return CheckResult(
-        "FAIL",
-        f"Slack AES key not cached ({_SLACK_KEY} missing)",
-        "Run: python -m sps_manoeuvre --bootstrap",
+        "WARN",
+        "SLACK_USER_TOKEN or SLACK_COOKIE is not configured",
+        "Run: sps-manoeuvre --setup to configure Slack tokens in .bob/mcp.json",
     )
 
 
