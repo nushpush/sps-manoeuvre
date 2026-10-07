@@ -57,48 +57,6 @@ Edit `src/sps_manoeuvre/repos.json`:
 2. Ask Bob: *"ping the sps output channel"* → should return `pong`
 3. Ask Bob: *"fetch the latest SPS announcements"*
 
----
-
-## Getting credentials
-
-### GitHub PAT
-1. https://github.ibm.com/settings/tokens → Generate new token (classic)
-2. Scopes: tick `repo` (full)
-3. Copy the `ghp_...` value
-
-### Slack webhook URL
-1. https://api.slack.com/apps → open or create your app → Incoming Webhooks
-2. Add webhook → choose your output channel
-3. Copy the `https://hooks.slack.com/services/...` URL
-
-### Slack user token & cookie
-
-These two values let SPS Manoeuvre read Slack channels on your behalf.
-
-| What you copy | Looks like | Paste into |
-|---|---|---|
-| `Authorization` request header value | `xoxc-12345-67890-...` | **`SLACK_USER_TOKEN`** |
-| `d=` portion of the `Cookie` request header | `xoxd-...` | **`SLACK_COOKIE`** |
-
-**Step-by-step:**
-
-1. Open **https://app.slack.com** in Chrome (not the desktop app).
-2. Log in to your IBM workspace if prompted.
-3. Open DevTools: **F12** (Windows/Linux) or **⌘ Option I** (macOS).
-4. Go to the **Network** tab. Make sure recording is on (red circle).
-5. Click any channel in the Slack sidebar to trigger a request.
-6. In the Network tab filter box, type **`api.slack.com`** to narrow results.
-7. Click any request in the list (e.g. one named `conversations.history`).
-8. In the right panel, click **Headers** → scroll to **Request Headers**.
-9. Find and copy:
-   - **`Authorization`** header → value starts with `Bearer xoxc-` → copy everything **after** `Bearer ` (i.e. `xoxc-...`) → this is your **`SLACK_USER_TOKEN`**
-   - **`Cookie`** header → find the `d=xoxd-...` segment → copy everything **after** `d=` (i.e. `xoxd-...`) → this is your **`SLACK_COOKIE`**
-10. Run `sps-manoeuvre --setup` and paste each value when prompted.
-
-> **Note:** these tokens expire when you log out of Slack. Re-run `sps-manoeuvre --setup` to refresh them.
-
-### IBM Cloud API key
-https://cloud.ibm.com/iam/apikeys → Create
 
 ---
 
