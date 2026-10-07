@@ -7,10 +7,10 @@ Full documentation is in [README.md](README.md). This page is a condensed checkl
 ## Checklist
 
 - [ ] Python 3.10+ installed (`python3 --version`)
-- [ ] Slack desktop app installed and logged in to your IBM workspace
 - [ ] Bob installed (https://bob.ibm.com)
 - [ ] GitHub PAT for `github.ibm.com` with `repo` scope
 - [ ] Slack incoming webhook URL for your output channel
+- [ ] Slack user token (`xoxc-...`) and cookie (`xoxd-...`) — see [Getting credentials](#getting-credentials) below
 - [ ] IBM Cloud API key (for pipeline failure log fetching — optional)
 
 ---
@@ -23,37 +23,13 @@ cd sps-manoeuvre
 pip3 install -e .
 ```
 
-## 2. Bootstrap Slack tokens (macOS only — run once)
+## 2. Run the setup wizard
 
 ```bash
-cd src
-python3 -m sps_manoeuvre --bootstrap
+sps-manoeuvre --setup
 ```
 
-Click **Allow** in the macOS Keychain dialog.
-
-## 3. Configure `.bob/mcp.json`
-
-```json
-{
-  "mcpServers": {
-    "sps-manoeuvre": {
-      "command": "python3",
-      "args": ["-m", "sps_manoeuvre"],
-      "cwd": "/absolute/path/to/sps-manoeuvre/src",
-      "env": {
-        "GITHUB_TOKEN": "ghp_your-token-here",
-        "SLACK_WEBHOOK_URL": "https://hooks.slack.com/services/T.../B.../...",
-        "IBM_CLOUD_API_KEY": "your-ibm-cloud-api-key"
-      }
-    }
-  }
-}
-```
-
-> **Linux/Windows:** also add `SLACK_USER_TOKEN` and `SLACK_COOKIE` — see [README.md#manual-token-setup-non-macos](README.md#manual-token-setup-non-macos).
-
-## 4. Add repos to the watchlist
+## 3. Add repos to the watchlist
 
 Edit `src/sps_manoeuvre/repos.json`:
 
@@ -65,10 +41,10 @@ Edit `src/sps_manoeuvre/repos.json`:
 }
 ```
 
-## 5. Reload Bob and smoke-test
+## 4. Reload Bob and smoke-test
 
 1. Bob → **Settings → MCP Servers → Reload**
-2. Ask Bob: *"ping the sps pipeline bot"* → should return `pong`
+2. Ask Bob: *"ping the sps output channel"* → should return `pong`
 3. Ask Bob: *"fetch the latest SPS announcements"*
 
 ---
@@ -85,12 +61,31 @@ Edit `src/sps_manoeuvre/repos.json`:
 2. Add webhook → choose your output channel
 3. Copy the `https://hooks.slack.com/services/...` URL
 
-### Slack user token (Linux/Windows manual method)
-1. Open Slack in Chrome → DevTools (`F12`) → Network tab
-2. Click any channel → filter for `api.slack.com` requests
-3. Click a request → Headers:
-   - `Authorization: Bearer xoxc-...` → `SLACK_USER_TOKEN`
-   - `Cookie: d=xoxd-...` (just the `xoxd-...` part) → `SLACK_COOKIE`
+### Slack user token & cookie
+
+These two values let SPS Manoeuvre read Slack channels on your behalf.
+
+| What you copy | Looks like | Paste into |
+|---|---|---|
+| `Authorization` request header value | `xoxc-12345-67890-...` | **`SLACK_USER_TOKEN`** |
+| `d=` portion of the `Cookie` request header | `xoxd-...` | **`SLACK_COOKIE`** |
+
+**Step-by-step:**
+
+1. Open **https://app.slack.com** in Chrome (not the desktop app).
+2. Log in to your IBM workspace if prompted.
+3. Open DevTools: **F12** (Windows/Linux) or **⌘ Option I** (macOS).
+4. Go to the **Network** tab. Make sure recording is on (red circle).
+5. Click any channel in the Slack sidebar to trigger a request.
+6. In the Network tab filter box, type **`api.slack.com`** to narrow results.
+7. Click any request in the list (e.g. one named `conversations.history`).
+8. In the right panel, click **Headers** → scroll to **Request Headers**.
+9. Find and copy:
+   - **`Authorization`** header → value starts with `Bearer xoxc-` → copy everything **after** `Bearer ` (i.e. `xoxc-...`) → this is your **`SLACK_USER_TOKEN`**
+   - **`Cookie`** header → find the `d=xoxd-...` segment → copy everything **after** `d=` (i.e. `xoxd-...`) → this is your **`SLACK_COOKIE`**
+10. Run `sps-manoeuvre --setup` and paste each value when prompted.
+
+> **Note:** these tokens expire when you log out of Slack. Re-run `sps-manoeuvre --setup` to refresh them.
 
 ### IBM Cloud API key
 https://cloud.ibm.com/iam/apikeys → Create

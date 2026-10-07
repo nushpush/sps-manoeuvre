@@ -17,13 +17,13 @@ import shutil
 import sys
 from pathlib import Path
 
-
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _BOB_DIR = _PROJECT_ROOT / ".bob"
 _MCP_JSON = _BOB_DIR / "mcp.json"
-_SLACK_KEY = _BOB_DIR / "slack-key.bin"
 _REPOS_FILE = Path(__file__).resolve().parent / "repos.json"
 _REPOS_EXAMPLE = Path(__file__).resolve().parent / "repos.json.example"
+
+_SLACK_DESKTOP_DIR = Path.home() / "Library/Application Support/Slack"
 
 _REQUIRED_PACKAGES = [
     ("mcp", "mcp"),
@@ -89,11 +89,18 @@ def setup_mcp_config(interactive: bool = True) -> bool:
         except Exception:
             existing_env = {}
 
+    # Detect whether Slack desktop auto-refresh will work at runtime.
+    # If not, we must prompt for the tokens now so --run doesn't fail later.
+    slack_desktop_available = sys.platform == "darwin" and _SLACK_DESKTOP_DIR.exists()
+
     if existing_env:
         print(f"\n⚙️  Found existing MCP configuration ({_MCP_JSON}):")
         print(f"  GITHUB_TOKEN:      {_mask_secret(existing_env.get('GITHUB_TOKEN', ''))}")
         print(f"  SLACK_WEBHOOK_URL: {_mask_secret(existing_env.get('SLACK_WEBHOOK_URL', ''))}")
         print(f"  IBM_CLOUD_API_KEY: {_mask_secret(existing_env.get('IBM_CLOUD_API_KEY', ''))}")
+        if not slack_desktop_available:
+            print(f"  SLACK_USER_TOKEN:  {_mask_secret(existing_env.get('SLACK_USER_TOKEN', ''))}")
+            print(f"  SLACK_COOKIE:      {_mask_secret(existing_env.get('SLACK_COOKIE', ''))}")
 
         if interactive and sys.stdin.isatty():
             try:
@@ -110,6 +117,8 @@ def setup_mcp_config(interactive: bool = True) -> bool:
     github_token = existing_env.get("GITHUB_TOKEN", "")
     slack_webhook = existing_env.get("SLACK_WEBHOOK_URL", "")
     ibmcloud_key = existing_env.get("IBM_CLOUD_API_KEY", "")
+    slack_user_token = existing_env.get("SLACK_USER_TOKEN", "")
+    slack_cookie = existing_env.get("SLACK_COOKIE", "")
 
     if interactive and sys.stdin.isatty():
         try:
@@ -127,6 +136,21 @@ def setup_mcp_config(interactive: bool = True) -> bool:
             val = input(prompt_ibm).strip()
             if val:
                 ibmcloud_key = val
+
+            if not slack_desktop_available:
+                print("\n  ℹ️  Slack desktop app not detected — manual token entry required.")
+                print("  Open Slack in Chrome → DevTools (F12) → Network tab → any api.slack.com request:")
+                print("    Authorization header → xoxc-... value  →  SLACK_USER_TOKEN")
+                print("    Cookie header        → d=xoxd-... part →  SLACK_COOKIE")
+                prompt_ut = f"Slack User Token (xoxc-...) [{_mask_secret(slack_user_token)}]: " if slack_user_token else "Slack User Token (xoxc-...): "
+                val = input(prompt_ut).strip()
+                if val:
+                    slack_user_token = val
+                prompt_ck = f"Slack Cookie (xoxd-...) [{_mask_secret(slack_cookie)}]: " if slack_cookie else "Slack Cookie (xoxd-...): "
+                val = input(prompt_ck).strip()
+                if val:
+                    slack_cookie = val
+
         except (EOFError, KeyboardInterrupt):
             print("\nSetup cancelled.")
             return False
@@ -137,6 +161,10 @@ def setup_mcp_config(interactive: bool = True) -> bool:
     }
     if ibmcloud_key:
         env_config["IBM_CLOUD_API_KEY"] = ibmcloud_key
+    if slack_user_token:
+        env_config["SLACK_USER_TOKEN"] = slack_user_token
+    if slack_cookie:
+        env_config["SLACK_COOKIE"] = slack_cookie
 
     mcp_data = {
         "mcpServers": {
@@ -182,29 +210,6 @@ def setup_repos_json() -> bool:
     return False
 
 
-def setup_slack_bootstrap() -> bool:
-    """Bootstrap Slack token auto-refresh on macOS if needed."""
-    if sys.platform != "darwin":
-        print("\nℹ️  Non-macOS platform detected: Slack desktop auto-refresh is macOS only.")
-        print("   If you need Slack channel reading, add SLACK_USER_TOKEN and SLACK_COOKIE to .bob/mcp.json.")
-        return True
-
-    print("\n🔐 Slack token caching (macOS):")
-    if _SLACK_KEY.exists():
-        print(f"  ✓ Cached Slack AES key exists ({_SLACK_KEY}).")
-        return True
-
-    print("  Bootstrapping Slack AES key from Keychain...")
-    try:
-        from .slack_token_refresh import bootstrap
-        bootstrap()
-        return True
-    except Exception as exc:
-        print(f"  ⚠️  Slack bootstrap failed: {exc}")
-        print("  You can run 'python -m sps_manoeuvre --bootstrap' in terminal later.")
-        return False
-
-
 def run(interactive: bool = True) -> int:
     """Run the complete setup wizard."""
     print("=" * 60)
@@ -215,7 +220,6 @@ def run(interactive: bool = True) -> int:
     check_packages()
     setup_mcp_config(interactive=interactive)
     setup_repos_json()
-    setup_slack_bootstrap()
 
     print("\n" + "=" * 60)
     print("🎉 Setup Wizard Complete!")
